@@ -185,7 +185,6 @@ for i in range(1, n0):
         keep[lab0 == i] = 1
 body = cv2.dilate(keep, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (41, 41)))
 ta = np.clip(cv2.GaussianBlur(body.astype(np.float32), (0, 0), 7) * 1.6, 0, 1) * tb
-cv2.imwrite(os.path.join(HERE, "title_mask_debug.png"), (ta * 255).astype(np.uint8))
 core = keep
 n, lab, stats, cent = cv2.connectedComponentsWithStats(core, 8)
 temp_core = np.zeros_like(core)
