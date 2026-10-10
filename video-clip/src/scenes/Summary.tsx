@@ -1,10 +1,11 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { BODY, C, clamp, HEAD, Reveal, Sfx, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Row: React.FC<{ emoji: string; text: string; delay: number; color: string }> = ({ emoji, text, delay, color }) => {
   const p = useIn(delay, 13, 140);
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const shine = interpolate(frame, [delay + 6, delay + 26], [-100, 200], clamp);
   return (
     <div

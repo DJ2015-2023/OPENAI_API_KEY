@@ -1,9 +1,10 @@
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { ThreeCanvas } from "@remotion/three";
-import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate, spring, useVideoConfig } from "remotion";
 import { clamp, C } from "../theme";
 import { grooveTexture, slateTexture, stripeTexture, vinylLabelTexture } from "./textures";
+import { useSceneFrame } from "../timing";
 
 const Lights: React.FC<{ tint?: string }> = ({ tint = C.pink }) => (
   <>
@@ -31,7 +32,7 @@ const Canvas: React.FC<{ children: React.ReactNode; tint?: string }> = ({ childr
 
 /** Film slate that flies in, opens and snaps shut at `snapAt`. */
 export const Clapperboard3D: React.FC<{ snapAt: number; y?: number }> = ({ snapAt, y = 2.2 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const { fps } = useVideoConfig();
   const stripes = useMemo(() => stripeTexture(), []);
   const slate = useMemo(() => slateTexture(), []);
@@ -81,7 +82,7 @@ export const Clapperboard3D: React.FC<{ snapAt: number; y?: number }> = ({ snapA
 
 /** Spinning vinyl record. */
 export const Vinyl3D: React.FC<{ y?: number; scale?: number }> = ({ y = 1.6, scale = 1 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const { fps } = useVideoConfig();
   const label = useMemo(() => vinylLabelTexture(), []);
   const groove = useMemo(() => grooveTexture(), []);
@@ -114,7 +115,7 @@ export const Vinyl3D: React.FC<{ y?: number; scale?: number }> = ({ y = 1.6, sca
 
 /** Vintage film camera with spinning reels. */
 export const FilmCamera3D: React.FC<{ y?: number }> = ({ y = 1.2 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const { fps } = useVideoConfig();
   const enter = spring({ frame, fps, config: { damping: 15, stiffness: 70 } });
   const body = { color: "#4a4466", metalness: 0.5, roughness: 0.35 };
@@ -194,7 +195,7 @@ const heartShape = () => {
 
 /** Glossy extruded heart that beats on `beats` frames. */
 export const Heart3D: React.FC<{ y?: number; beats: number[] }> = ({ y = 1.8, beats }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const { fps } = useVideoConfig();
   const geom = useMemo(() => {
     const g = new THREE.ExtrudeGeometry(heartShape(), {

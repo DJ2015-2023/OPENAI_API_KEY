@@ -1,10 +1,11 @@
 import React from "react";
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { BODY, C, clamp, HEAD, Reveal, Sfx, StepBadge, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Item: React.FC<{ emoji: string; text: string; delay: number }> = ({ emoji, text, delay }) => {
   const p = useIn(delay, 14, 130);
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   return (
     <div
       style={{
@@ -26,7 +27,7 @@ const Item: React.FC<{ emoji: string; text: string; delay: number }> = ({ emoji,
 };
 
 export const Step3: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const fill = interpolate(frame, [30, 95], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) });
   const hours = Math.round(fill * 6);
   const R = 170;

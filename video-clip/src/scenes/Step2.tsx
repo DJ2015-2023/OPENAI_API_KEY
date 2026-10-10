@@ -1,6 +1,7 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { BODY, C, clamp, Flash, HEAD, Reveal, Sfx, StepBadge, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const FlipCard: React.FC<{
   delay: number;
@@ -12,7 +13,7 @@ const FlipCard: React.FC<{
   mergeAt: number;
   dir: 1 | -1;
 }> = ({ delay, emoji, title, text, color, top, mergeAt, dir }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const p = useIn(delay, 14, 90);
   const merge = useIn(mergeAt, 16, 90);
   const rotY = (1 - p) * 180 * dir;
@@ -51,7 +52,7 @@ const FlipCard: React.FC<{
 };
 
 export const Step2: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const MERGE = 185;
   const loop = useIn(105, 14, 100);
   const final = useIn(MERGE + 12, 12, 110);

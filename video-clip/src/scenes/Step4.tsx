@@ -1,10 +1,11 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, interpolate, useVideoConfig } from "remotion";
 import { FilmCamera3D } from "../three/Objects";
 import { BODY, C, clamp, Flash, HEAD, Reveal, Sfx, StepBadge } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Viewfinder: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const { fps } = useVideoConfig();
   const o = interpolate(frame, [10, 25], [0, 1], clamp);
   const corner = (s: React.CSSProperties) => (

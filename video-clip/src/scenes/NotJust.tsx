@@ -1,6 +1,7 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { BODY, C, clamp, HEAD, Reveal, Sfx, Strike, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Chip: React.FC<{ emoji: string; text: string; delay: number; color: string; angle: number }> = ({
   emoji,
@@ -10,7 +11,7 @@ const Chip: React.FC<{ emoji: string; text: string; delay: number; color: string
   angle,
 }) => {
   const p = useIn(delay, 11, 140);
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   return (
     <div
       style={{
@@ -38,7 +39,7 @@ const Chip: React.FC<{ emoji: string; text: string; delay: number; color: string
 };
 
 export const NotJust: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const dimOld = interpolate(frame, [70, 85], [1, 0.35], clamp);
   return (
     <AbsoluteFill>

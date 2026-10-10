@@ -1,12 +1,13 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { Clapperboard3D } from "../three/Objects";
 import { BODY, C, clamp, Flash, HEAD, Reveal, Sfx, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const SNAP = 48;
 
 const Letter: React.FC<{ ch: string; delay: number }> = ({ ch, delay }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const p = useIn(delay, 10, 160);
   const jitter = Math.max(0, 1 - (frame - SNAP) / 30) * 10;
   return (
@@ -31,7 +32,7 @@ const Letter: React.FC<{ ch: string; delay: number }> = ({ ch, delay }) => {
 };
 
 export const Intro: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const title = "VIDEO CLIP".split("");
   const zoom = interpolate(frame, [SNAP, SNAP + 140], [1.08, 1], clamp);
   return (

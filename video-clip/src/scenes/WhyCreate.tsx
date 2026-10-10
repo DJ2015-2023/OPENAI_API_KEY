@@ -1,10 +1,11 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { BODY, C, clamp, Flash, HEAD, Reveal, Sfx, Strike, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Word: React.FC<{ text: string; delay: number; color: string }> = ({ text, delay, color }) => {
   const p = useIn(delay, 9, 170);
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   return (
     <div
       style={{
@@ -23,7 +24,7 @@ const Word: React.FC<{ text: string; delay: number; color: string }> = ({ text, 
 };
 
 export const WhyCreate: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const dim = interpolate(frame, [62, 75], [1, 0.35], clamp);
   return (
     <AbsoluteFill>

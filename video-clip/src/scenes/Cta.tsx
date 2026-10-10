@@ -1,12 +1,13 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { Heart3D } from "../three/Objects";
 import { BODY, C, clamp, HEAD, Reveal, Sfx, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const BEATS = [20, 50, 80, 110, 140, 170, 200, 230];
 
 export const Cta: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const btn = useIn(85, 10, 140);
   const pulse = 1 + 0.04 * Math.max(0, Math.sin((frame - 85) / 6));
   const fadeOut = interpolate(frame, [240, 270], [1, 0], clamp);

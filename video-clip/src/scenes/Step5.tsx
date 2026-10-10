@@ -1,10 +1,11 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { BODY, C, clamp, HEAD, Reveal, Sfx, StepBadge, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Tile: React.FC<{ emoji: string; text: string; delay: number; color: string }> = ({ emoji, text, delay, color }) => {
   const p = useIn(delay, 13, 100);
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   return (
     <div style={{ perspective: 1200 }}>
       <div
@@ -43,7 +44,7 @@ const Avatar: React.FC<{ color: string; emoji: string; delay: number }> = ({ col
 };
 
 export const Step5: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const stamp = useIn(30, 9, 200);
   return (
     <AbsoluteFill>

@@ -1,10 +1,11 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { Vinyl3D } from "../three/Objects";
 import { BODY, C, clamp, GlassCard, HEAD, Reveal, Sfx, StepBadge, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Note: React.FC<{ i: number }> = ({ i }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const cycle = 70;
   const t = ((frame + i * 23) % cycle) / cycle;
   const x = 540 + Math.sin(i * 1.7 + t * 4) * (180 + i * 30) * (i % 2 ? 1 : -1);
@@ -28,7 +29,7 @@ const Note: React.FC<{ i: number }> = ({ i }) => {
 
 const Check: React.FC<{ label: string; emoji: string; delay: number }> = ({ label, emoji, delay }) => {
   const p = useIn(delay, 12, 140);
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const tick = interpolate(frame, [delay + 6, delay + 16], [0, 1], clamp);
   return (
     <div
@@ -56,7 +57,7 @@ const Check: React.FC<{ label: string; emoji: string; delay: number }> = ({ labe
 };
 
 export const Step1: React.FC = () => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const bubble = useIn(70, 12, 120);
   return (
     <AbsoluteFill>

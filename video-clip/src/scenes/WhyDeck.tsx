@@ -1,6 +1,7 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { BODY, C, clamp, HEAD, Reveal, Sfx, useIn } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const DeckCard: React.FC<{ i: number; word: string; noun: string; emoji: string; color: string; delay: number }> = ({
   i,
@@ -10,7 +11,7 @@ const DeckCard: React.FC<{ i: number; word: string; noun: string; emoji: string;
   color,
   delay,
 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const p = useIn(delay, 13, 110);
   const fan = useIn(150, 14, 90);
   const baseRot = (i - 1.5) * 3;

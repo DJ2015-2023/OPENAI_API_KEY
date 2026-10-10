@@ -1,10 +1,11 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { BODY, C, clamp, GlassCard, HEAD, Reveal, Sfx, useIn, Words } from "../theme";
+import { useSceneFrame } from "../timing";
 
 const Icon: React.FC<{ emoji: string; label: string; delay: number; color: string }> = ({ emoji, label, delay, color }) => {
   const p = useIn(delay, 10, 130);
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, opacity: Math.min(1, p * 2) }}>
       <div
@@ -31,7 +32,7 @@ const Icon: React.FC<{ emoji: string; label: string; delay: number; color: strin
 };
 
 const Arrow: React.FC<{ delay: number }> = ({ delay }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const w = interpolate(frame, [delay, delay + 10], [0, 1], clamp);
   return (
     <div style={{ fontSize: 70, color: C.gold, opacity: w, scale: String(w), marginBottom: 70 }}>➜</div>

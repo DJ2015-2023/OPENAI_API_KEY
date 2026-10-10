@@ -8,6 +8,7 @@ import { wipe } from "@remotion/transitions/wipe";
 import { flip } from "@remotion/transitions/flip";
 import { clockWipe } from "@remotion/transitions/clock-wipe";
 import { Backdrop, clamp, FilmLook } from "./theme";
+import { BASE, getTiming, SceneShell, type SceneId } from "./timing";
 import { Intro } from "./scenes/Intro";
 import { Imagine } from "./scenes/Imagine";
 import { NotJust } from "./scenes/NotJust";
@@ -21,24 +22,12 @@ import { WhyCreate } from "./scenes/WhyCreate";
 import { Summary } from "./scenes/Summary";
 import { Cta } from "./scenes/Cta";
 
-export const SCENES = {
-  Intro: 180,
-  Imagine: 165,
-  NotJust: 215,
-  Step1: 275,
-  Step2: 285,
-  Step3: 290,
-  Step4: 245,
-  Step5: 270,
-  WhyDeck: 190,
-  WhyCreate: 200,
-  Summary: 220,
-  Cta: 270,
-} as const;
+const SCENE_IDS = Object.keys(BASE) as SceneId[];
+
+export const SCENES = Object.fromEntries(SCENE_IDS.map((id) => [id, getTiming(id).duration])) as Record<SceneId, number>;
 
 export const T = 15; // transition length in frames
-export const TOTAL =
-  Object.values(SCENES).reduce((a, b) => a + b, 0) - T * (Object.keys(SCENES).length - 1);
+export const TOTAL = SCENE_IDS.reduce((a, id) => a + SCENES[id], 0) - T * (SCENE_IDS.length - 1);
 
 const Music: React.FC = () => {
   const frame = useCurrentFrame();
@@ -48,7 +37,7 @@ const Music: React.FC = () => {
       name="Music"
       src={staticFile("sfx/music.wav")}
       premountFor={fps}
-      volume={interpolate(frame, [0, fps, durationInFrames - 2 * fps, durationInFrames], [0, 0.55, 0.55, 0], clamp)}
+      volume={interpolate(frame, [0, fps, durationInFrames - 2 * fps, durationInFrames], [0, 0.3, 0.3, 0], clamp)}
     />
   );
 };
@@ -63,51 +52,75 @@ export const Main: React.FC = () => {
       <Music />
       <TransitionSeries>
         <TransitionSeries.Sequence name="Intro" durationInFrames={SCENES.Intro} premountFor={fps}>
-          <Intro />
+          <SceneShell scene="Intro">
+            <Intro />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={t} />
         <TransitionSeries.Sequence name="Представь" durationInFrames={SCENES.Imagine} premountFor={fps}>
-          <Imagine />
+          <SceneShell scene="Imagine">
+            <Imagine />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={slide({ direction: "from-bottom" })} timing={s} />
         <TransitionSeries.Sequence name="Не просто" durationInFrames={SCENES.NotJust} premountFor={fps}>
-          <NotJust />
+          <SceneShell scene="NotJust">
+            <NotJust />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={wipe({ direction: "from-right" })} timing={t} />
         <TransitionSeries.Sequence name="Шаг 1" durationInFrames={SCENES.Step1} premountFor={fps}>
-          <Step1 />
+          <SceneShell scene="Step1">
+            <Step1 />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={slide({ direction: "from-right" })} timing={s} />
         <TransitionSeries.Sequence name="Шаг 2" durationInFrames={SCENES.Step2} premountFor={fps}>
-          <Step2 />
+          <SceneShell scene="Step2">
+            <Step2 />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={flip({ direction: "from-left" })} timing={t} />
         <TransitionSeries.Sequence name="Шаг 3" durationInFrames={SCENES.Step3} premountFor={fps}>
-          <Step3 />
+          <SceneShell scene="Step3">
+            <Step3 />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={slide({ direction: "from-bottom" })} timing={s} />
         <TransitionSeries.Sequence name="Шаг 4" durationInFrames={SCENES.Step4} premountFor={fps}>
-          <Step4 />
+          <SceneShell scene="Step4">
+            <Step4 />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={clockWipe({ width: 1080, height: 1920 })} timing={t} />
         <TransitionSeries.Sequence name="Шаг 5" durationInFrames={SCENES.Step5} premountFor={fps}>
-          <Step5 />
+          <SceneShell scene="Step5">
+            <Step5 />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={slide({ direction: "from-right" })} timing={s} />
         <TransitionSeries.Sequence name="Почему особенный" durationInFrames={SCENES.WhyDeck} premountFor={fps}>
-          <WhyDeck />
+          <SceneShell scene="WhyDeck">
+            <WhyDeck />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={t} />
         <TransitionSeries.Sequence name="Создать своё" durationInFrames={SCENES.WhyCreate} premountFor={fps}>
-          <WhyCreate />
+          <SceneShell scene="WhyCreate">
+            <WhyCreate />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={wipe({ direction: "from-bottom" })} timing={t} />
         <TransitionSeries.Sequence name="Итог" durationInFrames={SCENES.Summary} premountFor={fps}>
-          <Summary />
+          <SceneShell scene="Summary">
+            <Summary />
+          </SceneShell>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={t} />
         <TransitionSeries.Sequence name="Призыв" durationInFrames={SCENES.Cta} premountFor={fps}>
-          <Cta />
+          <SceneShell scene="Cta">
+            <Cta />
+          </SceneShell>
         </TransitionSeries.Sequence>
       </TransitionSeries>
       <FilmLook />

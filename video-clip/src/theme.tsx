@@ -9,6 +9,7 @@ import {
 } from "remotion";
 import { Audio } from "@remotion/media";
 import { staticFile } from "remotion";
+import { useSceneFrame, useToActual } from "./timing";
 
 export const C = {
   bg: "#07040d",
@@ -30,14 +31,14 @@ export const clamp = {
 
 /** 0→1 spring that starts at `delay` frames. */
 export const useIn = (delay: number, damping = 14, stiffness = 120) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const { fps } = useVideoConfig();
   return spring({ frame: frame - delay, fps, config: { damping, stiffness } });
 };
 
 /** 1→0 fade used to clear a group before the next beat of a scene. */
 export const useOut = (start: number, len = 12) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   return interpolate(frame, [start, start + len], [1, 0], clamp);
 };
 
@@ -56,7 +57,7 @@ export const Reveal: React.FC<RevealProps> = ({
   style,
   distance = 80,
 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const p = useIn(delay);
   const opacity = interpolate(frame, [delay, delay + 8], [0, 1], clamp);
   const d = (1 - p) * distance;
@@ -94,7 +95,7 @@ export const Words: React.FC<{
   highlight?: string[];
   highlightColor?: string;
 }> = ({ text, delay, stagger = 3, style, highlight = [], highlightColor = C.gold }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const { fps } = useVideoConfig();
   const words = text.split(" ");
   return (
@@ -137,7 +138,7 @@ export const StepBadge: React.FC<{ n: number; title: string; color?: string }> =
   title,
   color = C.pink,
 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const p = useIn(0, 13, 110);
   const sweep = interpolate(frame, [8, 40], [-120, 120], clamp);
   return (
@@ -237,11 +238,12 @@ export const Sfx: React.FC<{ name: string; at: number; volume?: number }> = ({
   volume = 0.8,
 }) => {
   const { fps } = useVideoConfig();
+  const toActual = useToActual();
   return (
     <Audio
       name={name}
       src={staticFile(`sfx/${name}.wav`)}
-      from={at}
+      from={toActual(at)}
       volume={volume}
       premountFor={fps}
     />
@@ -334,14 +336,14 @@ export const Flash: React.FC<{ at: number; len?: number; color?: string; max?: n
   color = "white",
   max = 0.85,
 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const o = interpolate(frame, [at - 2, at, at + len], [0, max, 0], clamp);
   return <AbsoluteFill style={{ background: color, opacity: o, mixBlendMode: "screen" }} />;
 };
 
 /** Animated strike-through line for "не просто…" statements. */
 export const Strike: React.FC<{ at: number; color?: string }> = ({ at, color = C.pink }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const w = interpolate(frame, [at, at + 10], [0, 104], clamp);
   return (
     <div
