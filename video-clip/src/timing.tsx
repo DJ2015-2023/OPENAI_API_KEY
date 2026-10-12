@@ -3,6 +3,7 @@ import { staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Audio } from "@remotion/media";
 import narration from "./narration.json";
 import voiceDurations from "./voice-durations.json";
+import { PhotoBg } from "./PhotoBg";
 
 export type SceneId = keyof typeof narration;
 
@@ -20,6 +21,22 @@ export const BASE: Record<SceneId, number> = {
   WhyCreate: 200,
   Summary: 220,
   Cta: 270,
+};
+
+/** Background photo for each scene. */
+const PHOTOS: Record<SceneId, { src: string; pan: "up" | "down" | "left" | "right" }> = {
+  Intro: { src: "photos/photo3.jpg", pan: "up" },
+  Imagine: { src: "photos/photo5.jpg", pan: "left" },
+  NotJust: { src: "photos/photo4.jpg", pan: "up" },
+  Step1: { src: "photos/photo1.jpg", pan: "right" },
+  Step2: { src: "photos/photo2.jpg", pan: "up" },
+  Step3: { src: "photos/photo4.jpg", pan: "down" },
+  Step4: { src: "photos/photo3.jpg", pan: "left" },
+  Step5: { src: "photos/photo1.jpg", pan: "up" },
+  WhyDeck: { src: "photos/photo2.jpg", pan: "right" },
+  WhyCreate: { src: "photos/photo5.jpg", pan: "up" },
+  Summary: { src: "photos/photo3.jpg", pan: "down" },
+  Cta: { src: "photos/photo5.jpg", pan: "left" },
 };
 
 const GAP = 5; // frames of breath between voice lines
@@ -74,7 +91,23 @@ const interp = (x: number, pts: [number, number][], from: 0 | 1) => {
   return from === 1 ? last[0] : last[1] + (x - last[0]);
 };
 
-type Ctx = { toDesigned: (f: number) => number; toActual: (f: number) => number };
+type Ctx = {
+  toDesigned: (f: number) => number;
+  toActual: (f: number) => number;
+  /** Actual frame ranges where the narrator is speaking. */
+  voice: [number, number][];
+};
+
+/** 1 when nobody speaks, `low` while the narrator speaks, with a short ramp around each line. */
+export const duckLevel = (frame: number, voice: [number, number][], low: number, ramp = 6) => {
+  let level = 1;
+  for (const [a, b] of voice) {
+    const dist = frame < a ? a - frame : frame > b ? frame - b : 0;
+    const g = Math.min(1, dist / ramp);
+    level = Math.min(level, low + (1 - low) * g);
+  }
+  return level;
+};
 
 const SceneTimeContext = createContext<Ctx | null>(null);
 
@@ -83,6 +116,13 @@ export const useSceneFrame = () => {
   const frame = useCurrentFrame();
   const ctx = useContext(SceneTimeContext);
   return ctx ? ctx.toDesigned(frame) : frame;
+};
+
+/** Volume multiplier that ducks sound effects under the narration. */
+export const useDuck = (low: number) => {
+  const frame = useCurrentFrame();
+  const ctx = useContext(SceneTimeContext);
+  return ctx ? duckLevel(frame, ctx.voice, low) : 1;
 };
 
 /** Converts a designed frame (e.g. an SFX cue) into the actual frame. */
@@ -98,9 +138,12 @@ export const SceneShell: React.FC<{ scene: SceneId; children: React.ReactNode }>
   const value: Ctx = {
     toDesigned: (f) => interp(f, t.points, 1),
     toActual: (f) => interp(f, t.points, 0),
+    voice: t.starts.map((st, k) => [st, st + voiceDurations[scene][k]] as [number, number]),
   };
+  const photo = PHOTOS[scene];
   return (
     <SceneTimeContext.Provider value={value}>
+      <PhotoBg src={photo.src} pan={photo.pan} duration={t.duration} />
       {children}
       {t.starts.map((s, k) => (
         <Audio

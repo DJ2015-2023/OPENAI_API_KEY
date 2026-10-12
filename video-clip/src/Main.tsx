@@ -8,7 +8,8 @@ import { wipe } from "@remotion/transitions/wipe";
 import { flip } from "@remotion/transitions/flip";
 import { clockWipe } from "@remotion/transitions/clock-wipe";
 import { Backdrop, clamp, FilmLook } from "./theme";
-import { BASE, getTiming, SceneShell, type SceneId } from "./timing";
+import { BASE, duckLevel, getTiming, SceneShell, type SceneId } from "./timing";
+import voiceDurations from "./voice-durations.json";
 import { Intro } from "./scenes/Intro";
 import { Imagine } from "./scenes/Imagine";
 import { NotJust } from "./scenes/NotJust";
@@ -29,15 +30,28 @@ export const SCENES = Object.fromEntries(SCENE_IDS.map((id) => [id, getTiming(id
 export const T = 15; // transition length in frames
 export const TOTAL = SCENE_IDS.reduce((a, id) => a + SCENES[id], 0) - T * (SCENE_IDS.length - 1);
 
+/** Global frame ranges of every voice line (scene starts minus transition overlaps). */
+const VOICE_GLOBAL: [number, number][] = (() => {
+  const out: [number, number][] = [];
+  let offset = 0;
+  for (const id of SCENE_IDS) {
+    const t = getTiming(id);
+    t.starts.forEach((s, k) => out.push([offset + s, offset + s + voiceDurations[id][k]]));
+    offset += SCENES[id] - T;
+  }
+  return out;
+})();
+
 const Music: React.FC = () => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
+  const fade = interpolate(frame, [0, fps, durationInFrames - 2 * fps, durationInFrames], [0, 1, 1, 0], clamp);
   return (
     <Audio
       name="Music"
       src={staticFile("sfx/music.wav")}
       premountFor={fps}
-      volume={interpolate(frame, [0, fps, durationInFrames - 2 * fps, durationInFrames], [0, 0.3, 0.3, 0], clamp)}
+      volume={0.32 * fade * duckLevel(frame, VOICE_GLOBAL, 0.5, 10)}
     />
   );
 };

@@ -9,7 +9,7 @@ import {
 } from "remotion";
 import { Audio } from "@remotion/media";
 import { staticFile } from "remotion";
-import { useSceneFrame, useToActual } from "./timing";
+import { useDuck, useSceneFrame, useToActual } from "./timing";
 
 export const C = {
   bg: "#07040d",
@@ -239,12 +239,14 @@ export const Sfx: React.FC<{ name: string; at: number; volume?: number }> = ({
 }) => {
   const { fps } = useVideoConfig();
   const toActual = useToActual();
+  // Effects sit under the narrator: quieter overall, and ducked hard while he speaks.
+  const duck = useDuck(0.18);
   return (
     <Audio
       name={name}
       src={staticFile(`sfx/${name}.wav`)}
       from={toActual(at)}
-      volume={volume}
+      volume={volume * 0.6 * duck}
       premountFor={fps}
     />
   );
