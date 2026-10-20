@@ -1,0 +1,9 @@
+.cache
+.tts
+episodes/*/build
+node_modules
+out
+public/episodes
+published.local.jsonl
+secrets
+episodes/*/build.log

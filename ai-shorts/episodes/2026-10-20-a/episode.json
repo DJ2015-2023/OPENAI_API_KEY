@@ -1,0 +1,63 @@
+{
+  "id": "2026-10-20-a",
+  "palette": "aurora",
+  "ticker": "OpenAI is building a humanoid robot  •  Sam Altman: \"In 2027, we'll have a cool demo\"  •  Robots on the streets: a few years later",
+  "scenes": [
+    {
+      "type": "hook",
+      "kicker": "AI NEWS · ROBOTICS",
+      "title": ["OPENAI", "HUMANOID"],
+      "lines": ["SAM ALTMAN", "CONFIRMS", "THE ROBOT!"],
+      "vo": ["Big A.I. news!", "Sam Altman says OpenAI will build a humanoid robot."]
+    },
+    {
+      "type": "reveal",
+      "word": "OpenAI",
+      "tag": "OPENAI ROBOTICS",
+      "title": "HUMANOID",
+      "title2": "ROBOT",
+      "subtitle": "DEMO EXPECTED IN 2027",
+      "vo": ["OpenAI is moving into hardware.", "And a first demo is expected in 2027."]
+    },
+    {
+      "type": "list",
+      "items": ["Motors & drives", "Custom electronics", "Mass production"],
+      "vo": ["The robotics team is hiring for motors and drives,", "custom electronics,", "and preparing for mass production."]
+    },
+    {
+      "type": "stat",
+      "value": 2027,
+      "grouping": false,
+      "unit": "THE DEMO",
+      "label": "\"REALLY COOL\" — SAM ALTMAN",
+      "vo": ["Twenty twenty-seven.", "That's when Altman promises a really cool demo."]
+    },
+    {
+      "type": "cards",
+      "tag": "WHAT WE KNOW",
+      "title": "NOT AT HOME YET",
+      "cards": [
+        { "title": "Demo: 2027", "sub": "Prototype preview" },
+        { "title": "Streets: years later", "sub": "Per Sam Altman" }
+      ],
+      "vo": ["But don't expect one at home soon.", "The demo comes first,", "and robots on the streets will take a few more years."]
+    },
+    {
+      "type": "outro",
+      "names": ["OpenAI", "Tesla", "Figure"],
+      "headline": ["THE ROBOT RACE", "IS ON!"],
+      "cta": "For more AI news",
+      "vo": ["OpenAI.", "Tesla.", "Figure.", "The robot race is on!", "Follow for more A.I. news."]
+    }
+  ],
+  "youtube": {
+    "title": "OpenAI Is Building a Humanoid Robot 🤖 Demo Expected in 2027 #Shorts",
+    "description": "Sam Altman says OpenAI will build a humanoid robot, with a \"really cool\" demo expected in 2027 and robots on the streets a few years after that.",
+    "tags": ["OpenAI", "Sam Altman", "humanoid robot", "AI news", "robotics", "artificial intelligence"]
+  },
+  "sources": [
+    { "title": "dev.ua — OpenAI humanoid robot", "url": "https://dev.ua/en/news/humanoidnyi-robot-vid-openai-1789463163" },
+    { "title": "TechNetBooks — OpenAI developing humanoid robot and dedicated AI hardware", "url": "https://www.technetbooks.com/2026/09/openai-developing-humanoid-robot-and.html" },
+    { "title": "Pasquale Pillitteri — Altman confirms OpenAI's humanoid robot", "url": "https://pasqualepillitteri.it/es/news/14376/openai-hardware-chips-robot-humanoide" }
+  ]
+}
