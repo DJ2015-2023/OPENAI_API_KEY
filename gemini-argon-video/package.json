@@ -1,0 +1,20 @@
+{
+  "name": "gemini-argon-video",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render GeminiArgon out/gemini-argon-4k.mp4 --scale=2"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.537",
+    "@remotion/google-fonts": "4.0.537",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.537"
+  },
+  "devDependencies": {
+    "d3-geo": "3.1.1",
+    "topojson-client": "3.1.0",
+    "world-atlas": "2.0.2"
+  }
+}
