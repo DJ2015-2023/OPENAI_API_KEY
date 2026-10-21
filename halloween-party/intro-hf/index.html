@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <link rel="stylesheet" href="assets/fonts/fonts.css" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #040203; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #040203; }
+      .layer { position: absolute; inset: 0; }
+      #sky { background: radial-gradient(90% 55% at 50% 30%, #3a0710 0%, #14030a 55%, #040203 100%); }
+      #moon { position: absolute; left: 640px; top: 230px; width: 300px; height: 300px; border-radius: 50%;
+        background: radial-gradient(circle at 40% 38%, #ff7a50, #d4241a 55%, #6a0a08 100%);
+        box-shadow: 0 0 120px 30px rgba(255, 50, 30, 0.45); }
+      .fog { position: absolute; left: -400px; width: 1900px; height: 700px; border-radius: 50%; filter: blur(70px); }
+      #fog1 { top: 1250px; background: radial-gradient(ellipse, rgba(170, 130, 150, 0.32), transparent 65%); }
+      #fog2 { top: 1450px; background: radial-gradient(ellipse, rgba(200, 80, 90, 0.25), transparent 65%); }
+      #fog3 { top: 300px; background: radial-gradient(ellipse, rgba(140, 90, 110, 0.16), transparent 65%); }
+      #bolt { position: absolute; left: 180px; top: -40px; width: 420px; height: 1100px; opacity: 0;
+        filter: drop-shadow(0 0 22px #bfe0ff) drop-shadow(0 0 60px #7fb0ff); }
+      #flash { background: #e8f0ff; opacity: 0; mix-blend-mode: screen; }
+      .bat { position: absolute; left: 0; top: 0; width: 120px; height: 60px; }
+      .bat svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 6px rgba(255,40,40,0.6)); }
+      #t1 { position: absolute; left: 0; right: 0; top: 760px; text-align: center; font-family: Oswald; font-weight: 500;
+        font-size: 64px; letter-spacing: 0.12em; color: #f1e6dc; }
+      #t2 { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-family: Oswald; font-weight: 700;
+        font-size: 300px; line-height: 1; color: #ff2238; text-shadow: 0 0 60px rgba(255, 30, 50, 0.8); }
+      #t3 { position: absolute; left: 0; right: 0; top: 1180px; text-align: center; font-family: 'Marck Script';
+        font-size: 104px; color: #f5c46a; text-shadow: 0 0 30px rgba(255, 140, 40, 0.6); }
+      .ch { display: inline-block; white-space: pre; }
+      #ghost { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-family: Oswald; font-weight: 700;
+        font-size: 300px; line-height: 1; color: rgba(60, 200, 255, 0.55); mix-blend-mode: screen; opacity: 0; }
+      #grain { opacity: 0.14; mix-blend-mode: overlay; background-size: 256px 256px; }
+      #vig { background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.9) 100%); }
+      #out { background: #000; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080" data-height="1920">
+      <div id="scene" class="clip layer" data-start="0" data-duration="4" data-track-index="0">
+        <div id="sky" class="layer"></div>
+        <div id="moon"></div>
+        <div id="fog3" class="fog"></div>
+        <svg id="bolt" viewBox="0 0 420 1100">
+          <path d="M260 0 L190 300 L250 300 L150 620 L215 620 L90 1100 L330 520 L260 520 L360 220 L290 220 L340 0 Z" fill="#f4f8ff" />
+        </svg>
+        <div id="bats" class="layer"></div>
+        <div id="t1"></div>
+        <div id="ghost">ЧТО</div>
+        <div id="t2"></div>
+        <div id="t3"></div>
+        <div id="fog1" class="fog"></div>
+        <div id="fog2" class="fog"></div>
+        <div id="flash" class="layer"></div>
+        <div id="grain" class="layer"></div>
+        <div id="vig" class="layer"></div>
+        <div id="out" class="layer"></div>
+      </div>
+    </div>
+    <script>
+      let seed = 31;
+      const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      const split = (id, text) => {
+        const el = document.getElementById(id);
+        text.split("").forEach((c) => {
+          const s = document.createElement("span");
+          s.className = "ch";
+          s.textContent = c;
+          el.appendChild(s);
+        });
+      };
+      split("t1", "ВЫ НЕ ПРЕДСТАВЛЯЕТЕ");
+      split("t2", "ЧТО");
+      split("t3", "вас ждёт дальше…");
+
+      const grain = document.createElement("canvas");
+      grain.width = grain.height = 256;
+      const g = grain.getContext("2d");
+      const img = g.createImageData(256, 256);
+      for (let i = 0; i < img.data.length; i += 4) {
+        const v = rand() * 255;
+        img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+        img.data[i + 3] = 255;
+      }
+      g.putImageData(img, 0, 0);
+      document.getElementById("grain").style.backgroundImage = `url(${grain.toDataURL()})`;
+
+      // A flock of bats bursting out of the moon toward the viewer.
+      const batPath = "M60 30 C52 18 40 10 22 8 C28 16 28 22 22 28 C14 24 6 26 0 32 C14 32 24 38 30 48 C38 40 50 38 60 44 C70 38 82 40 90 48 C96 38 106 32 120 32 C114 26 106 24 98 28 C92 22 92 16 98 8 C80 10 68 18 60 30 Z";
+      const bats = [];
+      const batLayer = document.getElementById("bats");
+      for (let i = 0; i < 22; i++) {
+        const b = document.createElement("div");
+        b.className = "bat";
+        b.innerHTML = `<svg viewBox="0 0 120 60"><path d="${batPath}" fill="#0a0406" stroke="rgba(255,60,50,0.55)" stroke-width="1.5"/></svg>`;
+        batLayer.appendChild(b);
+        const ang = -Math.PI * (0.15 + rand() * 0.7);
+        bats.push({ el: b, wing: b.querySelector("svg"), dx: Math.cos(ang) * (700 + rand() * 600), dy: Math.sin(ang) * (500 + rand() * 500) + 300,
+          delay: 0.1 + rand() * 1.6, s: 1.2 + rand() * 2.2, flap: 0.07 + rand() * 0.05 });
+      }
+
+      const tl = gsap.timeline({ paused: true });
+      // Lightning: two strikes with stuttering flashes.
+      [[0.15, 1], [1.55, 0.85]].forEach(([at, k]) => {
+        tl.fromTo("#flash", { opacity: 0 }, { opacity: 0.9 * k, duration: 0.04 }, at);
+        tl.to("#flash", { opacity: 0.1, duration: 0.06 }, at + 0.05);
+        tl.to("#flash", { opacity: 0.7 * k, duration: 0.03 }, at + 0.12);
+        tl.to("#flash", { opacity: 0, duration: 0.35 }, at + 0.16);
+        tl.fromTo("#bolt", { opacity: 0 }, { opacity: 1, duration: 0.03 }, at);
+        tl.to("#bolt", { opacity: 0, duration: 0.3 }, at + 0.2);
+      });
+      tl.fromTo("#moon", { y: 200, scale: 0.7, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 2.6, ease: "power2.out" }, 0);
+      tl.fromTo("#fog1", { x: -200 }, { x: 260, duration: 4, ease: "none" }, 0);
+      tl.fromTo("#fog2", { x: 220 }, { x: -260, duration: 4, ease: "none" }, 0);
+      tl.fromTo("#fog3", { x: 100, opacity: 0.4 }, { x: -200, opacity: 1, duration: 4, ease: "none" }, 0);
+
+      bats.forEach(({ el, wing, dx, dy, delay, s, flap }) => {
+        tl.fromTo(el, { x: 730, y: 360, scale: 0.05, opacity: 0 },
+          { x: 730 + dx, y: 360 + dy, scale: s * 1.6, opacity: 1, duration: 1.8, ease: "power1.in" }, delay);
+        tl.fromTo(wing, { scaleY: 1 }, { scaleY: 0.25, duration: flap, repeat: Math.floor(1.8 / flap), yoyo: true, ease: "sine.inOut" }, delay);
+      });
+
+      tl.fromTo("#t1 .ch", { opacity: 0, y: 30, filter: "blur(16px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out", stagger: 0.035 }, 0.35);
+      tl.fromTo("#t2 .ch", { opacity: 0, scale: 3, filter: "blur(30px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.35, ease: "expo.out", stagger: 0.07 }, 1.55);
+      // Glitch: cyan ghost jitters off the red word.
+      [1.75, 1.95, 2.3, 2.85, 3.2].forEach((at, i) => {
+        tl.fromTo("#ghost", { opacity: 0.8, x: i % 2 ? -18 : 22, y: i % 2 ? 6 : -8 }, { opacity: 0, x: 0, y: 0, duration: 0.12, ease: "steps(3)", immediateRender: false }, at);
+        tl.fromTo("#t2", { x: i % 2 ? 10 : -12 }, { x: 0, duration: 0.12, ease: "steps(3)", immediateRender: false }, at);
+      });
+      tl.fromTo("#t3 .ch", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.04 }, 2.15);
+      tl.to("#grain", { backgroundPosition: "512px 768px", duration: 4, ease: "steps(96)" }, 0);
+      tl.to("#out", { opacity: 1, duration: 0.3, ease: "power2.in" }, 3.7);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

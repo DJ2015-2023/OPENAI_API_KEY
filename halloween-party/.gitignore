@@ -1,0 +1,7 @@
+node_modules/
+out/
+intro-hf/.hyperframes/
+# Media stays local: the user's poster and rendered audio/video are not committed.
+public/poster.png
+public/intro.mp4
+public/mix.wav
