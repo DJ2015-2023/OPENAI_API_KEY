@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import { Easing, interpolate, useCurrentFrame } from 'remotion';
-import type { Palette, Sfx, Timeline } from './types';
+import type { Palette, Sfx, Style, Timeline } from './types';
 
 export const FPS = 30;
 export const W = 1080;
@@ -17,6 +17,56 @@ export const PALETTES: Record<Palette, { blue: string; cyan: string; violet: str
 export const C = { ...PALETTES.electric, white: '#f2f7ff' };
 export function setPalette(p: Palette) {
   Object.assign(C, PALETTES[p] ?? PALETTES.electric);
+}
+
+function hsl(h: number, s: number, l: number) {
+  h = ((h % 360) + 360) % 360;
+  s /= 100;
+  l /= 100;
+  const k = (n: number) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return '#' + [f(0), f(8), f(4)].map((x) => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+}
+
+/** A full palette from one hue, so every episode can have its own colors. */
+export function paletteFromHue(hue: number, harmony: Style['harmony']) {
+  const off = { triad: [40, 120, 240], split: [30, 150, 210], analog: [25, 55, 320], complement: [20, 180, 200] }[harmony];
+  return {
+    blue: hsl(hue, 85, 56),
+    cyan: hsl(hue + off[0], 95, 66),
+    violet: hsl(hue + off[1], 85, 64),
+    magenta: hsl(hue + off[2], 90, 62),
+    bg: hsl(hue, 55, 3.5),
+  };
+}
+
+// Headline faces: family name and average glyph width (em) used to auto-fit text.
+export const FONTS: Record<Style['font'], { family: string; em: number }> = {
+  sora: { family: 'Sora', em: 0.74 },
+  space: { family: 'Space Grotesk', em: 0.66 },
+  unbounded: { family: 'Unbounded', em: 0.9 },
+  syne: { family: 'Syne', em: 0.78 },
+  archivo: { family: 'Archivo Black', em: 0.82 },
+  bebas: { family: 'Bebas Neue', em: 0.46 },
+  oswald: { family: 'Oswald', em: 0.56 },
+  montserrat: { family: 'Montserrat', em: 0.82 },
+};
+
+/** Active style, defaulting to the original look for episodes without one. */
+export const S: Style = {
+  hue: 220, harmony: 'triad', font: 'sora', transition: 'zoom', hud: 'ticker', motion: 'impact', camera: 'energetic', bpm: 120, progression: 0, key: 0,
+};
+export const HEAD = { family: 'Sora', em: 0.74 };
+
+export function applyStyle(tl: { palette?: Palette; style?: Style }) {
+  if (tl.style) {
+    Object.assign(S, tl.style);
+    Object.assign(C, paletteFromHue(tl.style.hue, tl.style.harmony));
+  } else {
+    setPalette(tl.palette ?? 'electric');
+  }
+  Object.assign(HEAD, FONTS[S.font] ?? FONTS.sora);
 }
 
 /** hex (#rrggbb) → rgba() string. */

@@ -2,7 +2,7 @@ import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import land from '../land.json';
 import type { CardsScene, TimedScene } from '../types';
-import { C, FPS, W, clamp, cue, easeOut, mix, prog, rgba } from '../lib';
+import { C, FPS, HEAD, W, clamp, cue, easeOut, mix, prog, rgba } from '../lib';
 import { Canvas, glowSprite } from '../components/canvas';
 import { Tag, Title, mono, sora } from '../components/type';
 
@@ -57,7 +57,7 @@ const Card: React.FC<{ title: string; sub: string; at: number; icon: React.React
     >
       <div style={{ width: 84, height: 84, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${color}, ${C.violet})`, boxShadow: `0 0 30px ${color}88`, flexShrink: 0 }}>{icon}</div>
       <div>
-        <div style={{ fontFamily: sora, fontWeight: 800, fontSize: Math.min(50, 1260 / Math.max(1, title.length)), color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{title}</div>
+        <div style={{ fontFamily: HEAD.family, fontWeight: 800, fontSize: Math.min(50, 930 / Math.max(1, title.length * HEAD.em)), color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{title}</div>
         <div style={{ fontFamily: mono, fontSize: 22, color: '#a9d8ff', letterSpacing: '0.25em', marginTop: 8 }}>{sub}</div>
       </div>
     </div>
@@ -94,9 +94,9 @@ export const Cards: React.FC<{ s: TimedScene & CardsScene }> = ({ s }) => {
           ctx.fillRect(0, 0, 1080, 1920);
           // ocean body with a lit limb
           const body = ctx.createRadialGradient(GX - R * 0.35, GY - R * 0.4, R * 0.1, GX, GY, R);
-          body.addColorStop(0, '#173a8a');
-          body.addColorStop(0.7, '#08132f');
-          body.addColorStop(1, '#050a1c');
+          body.addColorStop(0, rgba(C.blue, 0.55));
+          body.addColorStop(0.7, rgba(C.bg, 0.95));
+          body.addColorStop(1, C.bg);
           ctx.fillStyle = body;
           ctx.beginPath();
           ctx.arc(GX, GY, R, 0, Math.PI * 2);

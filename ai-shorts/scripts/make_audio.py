@@ -19,7 +19,7 @@ TL = json.loads(TL_PATH.read_text())
 DUR = TL["duration"]
 MUSIC = TL["music"]
 N = int(SR * DUR)
-BEAT = 60 / 120
+BEAT = 60 / MUSIC.get("bpm", 120)
 rng = np.random.default_rng(7)
 
 
@@ -288,9 +288,20 @@ def sfx_data(sec):
 
 # ---------- score ----------
 music = np.zeros((2, N))
-# D minor progression, one chord per bar (2 s): Dm Bb F C
-CHORDS = [[146.83, 174.61, 220.0], [116.54, 146.83, 174.61], [174.61, 220.0, 261.63], [130.81, 164.81, 196.0]]
-ROOTS = [73.42, 58.27, 87.31, 65.41]
+# One chord per bar. Each progression is (root, chord) pairs in semitones above D2;
+# the episode style picks the progression and a transposition so no two scores match.
+PROGRESSIONS = [
+    [(0, "m"), (-4, "M"), (3, "M"), (-2, "M")],   # i  VI  III VII  (Dm Bb F C)
+    [(0, "m"), (5, "m"), (-4, "M"), (-2, "M")],   # i  iv  VI  VII
+    [(0, "m"), (-2, "M"), (-4, "M"), (-5, "M")],  # i  VII VI  V
+    [(0, "m"), (3, "M"), (-2, "M"), (5, "m")],    # i  III VII iv
+]
+D2 = 73.42
+semi = lambda n: D2 * 2 ** (n / 12)
+prog_ = PROGRESSIONS[MUSIC.get("progression", 0) % len(PROGRESSIONS)]
+key = MUSIC.get("key", 0)
+ROOTS = [semi(r + key) for r, _ in prog_]
+CHORDS = [[semi(r + key + 12 + iv) for iv in ((0, 3, 7) if q == "m" else (0, 4, 7))] for r, q in prog_]
 
 def section(t):
     """Arrangement per instrument at time t: full groove, with breakdowns where the timeline asks."""

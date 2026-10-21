@@ -68,7 +68,12 @@ async function recent() {
   const ch = await channel(token);
   const pl = ch.contentDetails.relatedPlaylists.uploads;
   const j = await (await api(token, `playlistItems?part=snippet&maxResults=30&playlistId=${pl}`)).json();
-  for (const it of j.items ?? []) console.log(`${it.snippet.publishedAt.slice(0, 10)}  ${it.snippet.title}`);
+  const items = (j.items ?? []).map((it) => ({ publishedAt: it.snippet.publishedAt, title: it.snippet.title, description: it.snippet.description }));
+  if (process.argv.includes('--json')) return console.log(JSON.stringify(items));
+  for (const it of items) {
+    const style = /Style ID: (\S+)/.exec(it.description ?? '')?.[1];
+    console.log(`${it.publishedAt.slice(0, 10)}  ${it.title}${style ? `   [${style}]` : ''}`);
+  }
 }
 
 async function upload(dir) {

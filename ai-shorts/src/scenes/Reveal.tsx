@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AbsoluteFill, continueRender, delayRender, useCurrentFrame } from 'remotion';
 import type { RevealScene, TimedScene } from '../types';
-import { C, FPS, W, clamp, cue, easeIn, easeInOut, mix, prog, rand, rgba } from '../lib';
+import { C, FPS, HEAD, S, W, clamp, cue, easeIn, easeInOut, mix, prog, rand, rgba } from '../lib';
 import { Canvas, glowSprite } from '../components/canvas';
 import { Tag, Title, mono, sora } from '../components/type';
 
@@ -10,14 +10,15 @@ function useWordPoints(word: string) {
   const [pts, setPts] = useState<{ x: number; y: number }[] | null>(null);
   const [handle] = useState(() => delayRender('sample word'));
   useEffect(() => {
-    const size = Math.min(250, 900 / Math.max(1, word.length * 0.62));
-    document.fonts.load(`600 ${size}px "${sora}"`).then(() => {
+    const size = Math.min(250, 900 / Math.max(1, word.length * HEAD.em * 0.85));
+    const face = `${S.font === 'sora' ? 600 : 'normal'} ${size}px "${HEAD.family}"`;
+    document.fonts.load(face).then(() => {
       const c = document.createElement('canvas');
       c.width = W;
       c.height = 400;
       const g = c.getContext('2d')!;
       g.fillStyle = '#fff';
-      g.font = `600 ${size}px "${sora}"`;
+      g.font = face;
       g.textAlign = 'center';
       g.textBaseline = 'middle';
       g.fillText(word, W / 2, 200);

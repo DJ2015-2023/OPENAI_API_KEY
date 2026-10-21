@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkLayout, pastStyles, pickStyle, styleId } from './style.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -169,6 +170,20 @@ if (!existsSync(join(epDir, 'episode.json'))) {
 }
 const ep = JSON.parse(readFileSync(join(epDir, 'episode.json'), 'utf8'));
 validate(ep);
+
+// Every video gets its own look, sound and structure (see scripts/style.mjs).
+const past = pastStyles(ep.id);
+if (!ep.style) {
+  ep.style = pickStyle(past);
+  writeFileSync(join(epDir, 'episode.json'), JSON.stringify(ep, null, 2) + '\n');
+}
+try {
+  checkLayout(ep.scenes, past);
+} catch (e) {
+  console.error(e.message);
+  process.exit(1);
+}
+log(`style ${styleId(ep.style, ep.scenes)}`);
 const buildDir = join(epDir, 'build');
 mkdirSync(join(buildDir, 'vo'), { recursive: true });
 
@@ -183,6 +198,7 @@ const audioRel = `episodes/${ep.id}.wav`;
 const timeline = {
   id: ep.id,
   palette: ep.palette ?? 'electric',
+  style: ep.style,
   ticker: ep.ticker ?? ep.youtube.title,
   fps: FPS,
   duration,
@@ -190,7 +206,7 @@ const timeline = {
   scenes,
   sfx: buildSfx(scenes, duration),
   vo,
-  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - 1.6 },
+  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - 1.6, bpm: ep.style.bpm, progression: ep.style.progression, key: ep.style.key },
 };
 writeFileSync(join(buildDir, 'timeline.json'), JSON.stringify(timeline, null, 1));
 log(`timeline: ${duration.toFixed(1)} s, ${scenes.length} scenes, ${timeline.sfx.length} sound effects`);
@@ -212,6 +228,7 @@ const desc = [
   ...ep.sources.map((s) => `• ${s.title}: ${s.url}`),
   '',
   'Voiceover and visuals are AI-generated.',
+  `Style ID: ${styleId(ep.style, ep.scenes)}`,
   '#Shorts #AI #AINews #ArtificialIntelligence',
 ].join('\n');
 writeFileSync(join(buildDir, 'youtube.json'), JSON.stringify({ title: ep.youtube.title.slice(0, 100), description: desc, tags: ep.youtube.tags ?? [] }, null, 1));

@@ -22,8 +22,8 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 
 1. **Setup** (fresh container): `cd ai-shorts && bash scripts/setup.sh`
 
-2. **What's been covered:** run `node scripts/youtube.mjs recent` (titles of the channel's
-   last 30 uploads; this is the source of truth). Also glance at `published.jsonl` and
+2. **What's been covered:** run `node scripts/youtube.mjs recent` (titles and Style IDs of the
+   channel's last 30 uploads; this is the source of truth). Also glance at `published.jsonl` and
    `episodes/` if they have anything.
 
 3. **Research.** Search the web (use `mode: "extended"`) for AI news from the last 24–48 h.
@@ -35,19 +35,27 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 4. **Write** `episodes/<YYYY-MM-DD>-a/episode.json` and `episodes/<YYYY-MM-DD>-b/episode.json`. The schema is in `src/types.ts`;
    `episodes/2026-10-20-a/episode.json` is a full example.
    - Scenes: `hook` first, `outro` last, 4–6 scenes in total. Mix the middle types
-     (`reveal`, `list`, `stat`, `cards`) to fit the story; don't use the same order every time.
+     (`reveal`, `list`, `stat`, `cards`) to fit the story. **Every video must be unique:** the
+     build refuses a scene layout (e.g. `HRLSO`) used by any of the last 10 videos, so vary
+     which middle scenes you use, how many, and their order. `node scripts/style.mjs
+     episodes/<id>` prints the recent layouts. `a` and `b` must also differ from each other.
+   - **Don't set `style` or `palette`.** The build gives each episode its own style
+     automatically (colors, headline font, transitions, news overlay, text animation, camera,
+     tempo, key and chords), different from the recent videos, and records it in the
+     YouTube description as a "Style ID" line. Leave that line in.
    - `vo`: one short phrase per on-screen element, in the order they appear. Each phrase is a
      cue: the element appears when its phrase starts. Aim for 90–120 spoken words in total
      (the video should land between 35 and 55 s). Write numbers the way they should be spoken
      ("twenty twenty-seven", "one million").
    - On-screen text: short and punchy (headline lines ≤ 16 characters work best).
    - `outro.vo`: one phrase per name, then the headline, then "Follow for more A.I. news."
-   - `palette`: one of `electric`, `aurora`, `ember`, `royal`; `a` and `b` use different ones,
-     and neither repeats the previous day's.
    - `youtube.title` ≤ 100 characters and ends with `#Shorts`; `sources` lists every URL you used.
 
 5. **Preview:** `node scripts/build.mjs episodes/<id> --no-render --stills`, then look at the
    `build/still_*.jpg` images. Fix overflowing or clashing text in episode.json and repeat.
+
+   Build `a` completely (step 6) before writing `b`'s layout, so `b`'s style and layout are
+   checked against `a` as well.
 
 6. **Render** both, one after the other: `node scripts/build.mjs episodes/<id>`
    (about 25–30 min each; run it in the background). Output per episode:

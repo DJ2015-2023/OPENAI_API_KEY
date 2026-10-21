@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import type { OutroScene, TimedScene } from '../types';
-import { C, FPS, W, clamp, cue, easeIn, easeOut, mix, prog, rand, rgba } from '../lib';
+import { C, FPS, HEAD, W, clamp, cue, easeIn, easeOut, mix, prog, rand, rgba } from '../lib';
 import { Canvas, glowSprite } from '../components/canvas';
 import { Title, mono, sora } from '../components/type';
 
@@ -137,7 +137,7 @@ export const Outro: React.FC<{ s: TimedScene & OutroScene }> = ({ s }) => {
                 display: 'flex', alignItems: 'center', gap: 18, padding: '26px 54px', borderRadius: 999,
                 background: `linear-gradient(90deg, ${C.blue}, ${C.violet})`, boxShadow: `0 0 60px ${C.violet}aa, inset 0 1px 0 rgba(255,255,255,0.4)`,
                 transform: `scale(${1 - Math.exp(-Math.max(0, t - (ctaAt + 0.9)) * 10) * (t > ctaAt + 0.9 ? 0.08 : 0)})`,
-                fontFamily: sora, fontWeight: 800, fontSize: 54, color: '#fff', letterSpacing: '0.02em',
+                fontFamily: HEAD.family, fontWeight: 800, fontSize: 54, color: '#fff', letterSpacing: '0.02em',
               }}
             >
               <svg width="54" height="54" viewBox="0 0 24 24" fill="#fff"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z" /></svg>
