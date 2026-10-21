@@ -20,8 +20,9 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 
 1. **Setup** (fresh container): `cd ai-shorts && bash scripts/setup.sh`
 
-2. **What's been covered:** read `published.jsonl` and list `episodes/`. If the YouTube
-   secrets are set, also run `node scripts/youtube.mjs recent`.
+2. **What's been covered:** run `node scripts/youtube.mjs recent` (titles of the channel's
+   last 30 uploads; this is the source of truth). Also glance at `published.jsonl` and
+   `episodes/` if they have anything.
 
 3. **Research.** Search the web (use `mode: "extended"`) for AI news from the last 24–48 h.
    Pick the story most likely to matter to a general tech audience: major model launches,
@@ -63,4 +64,6 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
    switch them to public in YouTube Studio. If they ask for changes, edit episode.json,
    rebuild, and ask again.
 
-9. **Save the record:** commit `episodes/<id>/episode.json` and `published.jsonl`, push.
+9. **Save the record (best effort):** commit `episodes/<id>/episode.json` and
+   `published.jsonl` and try one `git push`. If the push is refused, leave it: the channel's
+   upload list already prevents repeats. Don't retry or bring it up with the owner.
