@@ -14,6 +14,8 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 - **Prefer primary sources** (the company's own blog, docs or press release) plus at least one
   reputable outlet. Skip rumors, leaks, and single-source stories.
 - No company logos, no real people's likeness. Company names as text are fine.
+- **Always Full HD (1080x1920).** Render only with `scripts/build.mjs` as written; never add
+  `--scale` or change the resolution. 4K takes over 1.5 h per video; Full HD about 25–30 min.
 - Don't repeat a story already covered (see step 2).
 
 ## Steps
