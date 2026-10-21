@@ -19,21 +19,40 @@ const HUDS = ['ticker', 'badge', 'minimal'];
 const MOTIONS = ['impact', 'digital', 'elegant'];
 const CAMERAS = ['calm', 'energetic'];
 const BPMS = [112, 116, 120, 124, 128];
+const WORLDS = ['neon', 'liquid', 'editorial', 'synthwave', 'terminal'];
+const SCENE_TYPES = ['hook', 'reveal', 'list', 'stat', 'cards', 'outro'];
+const LAYOUTS = ['center', 'left'];
+const SHAPES = ['circle', 'square', 'diamond', 'stripe'];
+// Each world brings its own genre, so tempo ranges differ too.
+const WORLD_BPM = { neon: [120, 124, 128], liquid: [92, 96, 100], editorial: [112, 116, 120], synthwave: [100, 104, 108], terminal: [126, 130, 134] };
 
 /** Scene layout code, e.g. hook→reveal→stat→outro = "HRSO". */
 export const layoutOf = (scenes) => scenes.map((s) => s.type[0].toUpperCase()).join('');
 
 /** Compact, human-readable fingerprint stored in the YouTube description. */
+const variantCode = (st) => SCENE_TYPES.map((t) => st.variants?.[t] ?? 'A').join('');
+
 export function styleId(st, scenes) {
-  return [`${st.hue}${st.harmony[0]}`, st.font, st.transition, st.hud, st.motion, st.camera, `${st.bpm}.${st.progression}.${st.key + 3}`, layoutOf(scenes)].join('-');
+  const look = `${(st.world ?? 'neon').slice(0, 3)}.${variantCode(st)}.${(st.layout ?? 'center')[0]}${(st.shape ?? 'circle')[0]}`;
+  return [`${st.hue}${st.harmony[0]}`, st.font, st.transition, st.hud, st.motion, st.camera, `${st.bpm}.${st.progression}.${st.key + 3}`, layoutOf(scenes), look].join('-');
 }
 
 export function parseStyleId(id) {
   const p = id.trim().split('-');
   if (p.length < 8) return null;
-  const [hb, font, transition, hud, motion, camera, music, layout] = p;
+  const [hb, font, transition, hud, motion, camera, music, layout, look] = p;
   const [bpm, progression, k] = music.split('.').map(Number);
-  return { hue: parseInt(hb, 10), font, transition, hud, motion, camera, bpm, progression, key: k - 3, layout };
+  const out = { hue: parseInt(hb, 10), font, transition, hud, motion, camera, bpm, progression, key: k - 3, layout };
+  if (look) {
+    const [w, v, ls] = look.split('.');
+    Object.assign(out, {
+      world: WORLDS.find((x) => x.startsWith(w)) ?? 'neon',
+      variants: Object.fromEntries(SCENE_TYPES.map((t, i) => [t, v?.[i] ?? 'A'])),
+      align: ls?.[0] === 'l' ? 'left' : 'center',
+      shape: SHAPES.find((x) => x[0] === ls?.[1]) ?? 'circle',
+    });
+  }
+  return out;
 }
 
 /** Styles used before, most recent first. */
@@ -55,7 +74,7 @@ export function pastStyles(exceptId) {
     const f = join(dir, d, 'episode.json');
     if (!existsSync(f)) continue;
     const ep = JSON.parse(readFileSync(f, 'utf8'));
-    if (ep.style && ep.scenes) out.push({ ...ep.style, layout: layoutOf(ep.scenes) });
+    if (ep.style && ep.scenes) out.push({ ...ep.style, align: ep.style.layout, layout: layoutOf(ep.scenes) });
   }
   return out;
 }
@@ -66,6 +85,16 @@ const pick = (arr, avoid) => {
   return (ok.length ? ok : arr)[Math.floor(Math.random() * (ok.length ? ok.length : arr.length))];
 };
 
+/** Mix of immersive (A) and graphic (B) scene designs, never the same mix as the last video. */
+function pickVariants(past) {
+  const lastCode = past[0]?.variants ? SCENE_TYPES.map((t) => past[0].variants[t] ?? 'A').join('') : '';
+  for (let i = 0; i < 30; i++) {
+    const v = Object.fromEntries(SCENE_TYPES.map((t) => [t, Math.random() < 0.5 ? 'A' : 'B']));
+    if (SCENE_TYPES.map((t) => v[t]).join('') !== lastCode) return v;
+  }
+  return Object.fromEntries(SCENE_TYPES.map((t) => [t, 'B']));
+}
+
 export function pickStyle(past) {
   const last = (n, k) => past.slice(0, n).map((p) => p[k]);
   let hue;
@@ -73,7 +102,9 @@ export function pickStyle(past) {
     hue = Math.floor(Math.random() * 360);
     if (past.slice(0, 6).every((p) => hueDist(p.hue, hue) >= 35)) break;
   }
-  const music = () => ({ bpm: pick(BPMS, []), progression: Math.floor(Math.random() * 4), key: Math.floor(Math.random() * 7) - 3 });
+  // A different visual universe from the last two videos, then everything else varies within it.
+  const world = pick(WORLDS, past.slice(0, 2).map((p) => p.world ?? 'neon'));
+  const music = () => ({ bpm: pick(WORLD_BPM[world] ?? BPMS, []), progression: Math.floor(Math.random() * 4), key: Math.floor(Math.random() * 7) - 3 });
   let m = music();
   for (let i = 0; i < 50 && past.slice(0, 10).some((p) => p.bpm === m.bpm && p.progression === m.progression && p.key === m.key); i++) m = music();
   return {
@@ -85,6 +116,10 @@ export function pickStyle(past) {
     motion: pick(MOTIONS, last(1, 'motion')),
     camera: pick(CAMERAS, last(1, 'camera')),
     ...m,
+    world,
+    variants: pickVariants(past),
+    layout: pick(LAYOUTS, past.slice(0, 1).map((p) => p.align)),
+    shape: pick(SHAPES, past.slice(0, 2).map((p) => p.shape)),
   };
 }
 

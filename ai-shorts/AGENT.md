@@ -51,9 +51,20 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
      which middle scenes you use, how many, and their order. `node scripts/style.mjs
      episodes/<id>` prints the recent layouts. `a` and `b` must also differ from each other.
    - **Don't set `style` or `palette`.** The build gives each episode its own style
-     automatically (colors, headline font, transitions, news overlay, text animation, camera,
-     tempo, key and chords), different from the recent videos, and records it in the
-     YouTube description as a "Style ID" line. Leave that line in.
+     automatically, different from the recent videos, and records it in the YouTube
+     description as a "Style ID" line (leave that line in). The style sets:
+     - the **world**, a whole visual universe with its own backdrop, lettering, overlay and
+       music genre: `neon` (dark 3D glow, electronic), `liquid` (glass and soft color blobs,
+       chill), `editorial` (light magazine page, flat print type, percussive pop),
+       `synthwave` (retro sun and grid, chrome type, 80s synths), `terminal` (code rain,
+       monospace, glitch). It never repeats either of the last two videos' worlds;
+     - which **design** each scene uses: immersive 3D sets (A) or graphic motion-design
+       layouts (B: box wipes, outline type that fills, odometer gauge, split comparison,
+       timeline, question card);
+     - colors, headline font, transitions, text animation, camera, tempo, key and chords.
+   - Write each script so it reads as its own piece, not a template: vary the hook type
+     (number, question, contrast, warning), the kicker wording, and which scene types carry
+     the story.
    - **Length: 25–35 s, about 60–80 spoken words.** Shorter Shorts get watched to the end and
      replayed, which is what the algorithm rewards. 4–5 scenes is usually right.
    - **The first phrase is the hook and is spoken at 0.25 s.** It must make people stay: a
@@ -87,7 +98,8 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 
 7. **Ask for approval.** The full-quality file can exceed what the chat accepts, so send a
    preview: `ffmpeg -i build/video.mp4 -c:v libx264 -crf 24 -c:a copy build/preview.mp4`.
-   Send both previews (SendUserFile), then in Spanish, for each: the story in two lines, the
+   Send both previews (SendUserFile), then in Spanish, for each: the world it uses (from the
+   build log's `style` line, e.g. "mundo editorial"), the story in two lines, the
    title, the source links, and the contents of `build/social.txt` (ready-to-paste captions for
    TikTok and Instagram Reels; the preview file is the one to post there). Ask "¿Publico A, B,
    las dos o ninguna?". Then stop and wait.

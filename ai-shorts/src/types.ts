@@ -23,6 +23,12 @@ export type Style = {
   bpm: number;
   progression: number; // index into the score's chord progressions
   key: number; // semitone transposition
+  // Whole visual universe: background, text treatment, overlay and music genre.
+  world?: 'neon' | 'liquid' | 'editorial' | 'synthwave' | 'terminal';
+  // Which design each scene type uses: A = immersive 3D set, B = graphic layout on the world.
+  variants?: Partial<Record<Scene['type'], 'A' | 'B'>>;
+  layout?: 'center' | 'left'; // alignment of graphic (B) layouts
+  shape?: 'circle' | 'square' | 'diamond' | 'stripe'; // recurring graphic motif
 };
 
 export type Episode = {
@@ -50,5 +56,5 @@ export type Timeline = {
   captions?: { text: string; at: number; end: number; group: number }[];
   sfx: Sfx[];
   vo: { file: string; at: number }[];
-  music: { breakdowns: [number, number][]; beatStart: number; finalHit: number; bpm?: number; progression?: number; key?: number };
+  music: { breakdowns: [number, number][]; beatStart: number; finalHit: number; bpm?: number; progression?: number; key?: number; genre?: string };
 };

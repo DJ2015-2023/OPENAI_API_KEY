@@ -1,6 +1,6 @@
 import React from 'react';
 import { continueRender, delayRender, staticFile, useCurrentFrame } from 'remotion';
-import { C, FPS, HEAD, S, clamp, easeIn, mix, prog, rand } from '../lib';
+import { C, FPS, HEAD, S, THEME, clamp, easeIn, mix, prog, rand } from '../lib';
 
 // Fonts are bundled in public/fonts so rendering never depends on the network.
 export const sora = 'Sora';
@@ -50,7 +50,7 @@ const GLYPHS = '01<>/{}[]#$%&*+=?ABCDEFGHJKLMNPQRSTUVWXYZ';
 // length and any of the style's fonts fit on screen.
 let measureCtx: CanvasRenderingContext2D | null = null;
 /** Weight to request for the headline face: the extra fonts ship a single weight. */
-export const headWeight = (w: number | string) => (S.font === 'sora' ? w : 'normal');
+export const headWeight = (w: number | string) => (THEME.world === 'terminal' ? 700 : S.font === 'sora' ? w : 'normal');
 export function fitText(text: string, family: string, weight: number | string, wanted: number, maxW = 960, trackingEm = 0) {
   if (typeof document === 'undefined') return wanted;
   measureCtx ??= document.createElement('canvas').getContext('2d');
@@ -83,7 +83,15 @@ export const Title: React.FC<Props> = ({
   const r = rand(text.length * 97 + Math.round(at * 10));
   const seeds = chars.map(() => r());
 
-  const grad = gradient ?? `linear-gradient(180deg, #ffffff 0%, #dff6ff 45%, ${C.cyan} 100%)`;
+  // Each world has its own lettering: neon gradients, flat print ink, chrome, phosphor…
+  const worldGrad = {
+    neon: gradient ?? `linear-gradient(180deg, #ffffff 0%, #dff6ff 45%, ${C.cyan} 100%)`,
+    liquid: gradient ?? 'linear-gradient(180deg, #ffffff 0%, #f1f4ff 100%)',
+    editorial: gradient ? `linear-gradient(${C.blue}, ${C.blue})` : `linear-gradient(${THEME.ink}, ${THEME.ink})`,
+    synthwave: `linear-gradient(180deg, #ffffff 0%, #ffe9ff 38%, ${C.magenta} 50%, #2b0b4f 53%, ${C.cyan} 100%)`,
+    terminal: `linear-gradient(${C.cyan}, ${C.cyan})`,
+  } as const;
+  const grad = worldGrad[THEME.world] ?? worldGrad.neon;
   const entryAll = prog(t, at, 0.5);
   const split = (1 - prog(t, at, 0.45)) * (variant === 'slam' ? 26 : 12) + exitP * 30;
 
@@ -148,9 +156,9 @@ export const Title: React.FC<Props> = ({
         ...style,
       }}
     >
-      {split > 0.5 && layer(-split, C.magenta, 'screen')}
-      {split > 0.5 && layer(split, C.cyan, 'screen')}
-      <div style={{ position: 'absolute', inset: 0, filter: `drop-shadow(0 0 ${size * 0.18}px ${glow}aa) drop-shadow(0 0 ${size * 0.5}px ${glow}55)` }}>
+      {THEME.chroma && split > 0.5 && layer(-split, C.magenta, 'screen')}
+      {THEME.chroma && split > 0.5 && layer(split, C.cyan, 'screen')}
+      <div style={{ position: 'absolute', inset: 0, filter: THEME.glow ? `drop-shadow(0 0 ${size * 0.18 * THEME.glow}px ${glow}aa) drop-shadow(0 0 ${size * 0.5 * THEME.glow}px ${glow}55)` : THEME.world === 'editorial' ? undefined : 'drop-shadow(0 6px 18px rgba(0,0,0,0.45))' }}>
         {layer(0, null)}
       </div>
     </div>
@@ -168,11 +176,19 @@ export const Tag: React.FC<{ text: string; at: number; out?: number; color?: str
       <div
         style={{
           position: 'relative', padding: '14px 30px', fontFamily: mono, fontWeight: 700, fontSize: 30, letterSpacing: '0.32em',
-          color: '#fff', clipPath: `inset(0 ${(1 - p) * 100}% 0 0)`, background: `linear-gradient(90deg, ${color}33, ${color}11)`,
-          border: `2px solid ${color}aa`, borderRadius: 6, boxShadow: `0 0 40px ${color}44, inset 0 0 20px ${color}22`,
+          clipPath: `inset(0 ${(1 - p) * 100}% 0 0)`,
+          ...({
+            editorial: { color: '#fff', background: '#111', borderRadius: 0 },
+            terminal: { color: C.cyan, background: 'transparent', border: `2px dashed ${C.cyan}`, borderRadius: 0 },
+            liquid: { color: '#fff', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.35)', borderRadius: 999, backdropFilter: 'blur(10px)' },
+            synthwave: { color: '#fff', background: `linear-gradient(90deg, ${C.magenta}, ${C.violet})`, borderRadius: 4, boxShadow: `0 0 30px ${C.magenta}88` },
+          } as Record<string, React.CSSProperties>)[THEME.world] ?? {
+            color: '#fff', background: `linear-gradient(90deg, ${color}33, ${color}11)`, border: `2px solid ${color}aa`, borderRadius: 6,
+            boxShadow: `0 0 40px ${color}44, inset 0 0 20px ${color}22`,
+          },
         }}
       >
-        {text}
+        {THEME.world === 'terminal' ? `> ${text}` : text}
       </div>
     </div>
   );

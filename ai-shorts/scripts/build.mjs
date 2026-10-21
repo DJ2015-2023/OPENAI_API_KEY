@@ -256,7 +256,7 @@ if (!ep.style) {
   writeFileSync(join(epDir, 'episode.json'), JSON.stringify(ep, null, 2) + '\n');
 }
 try {
-  checkLayout(ep.scenes, past);
+  if (!args.includes('--allow-repeat')) checkLayout(ep.scenes, past); // --allow-repeat: test builds only
 } catch (e) {
   console.error(e.message);
   process.exit(1);
@@ -286,7 +286,7 @@ const timeline = {
   captions,
   sfx: buildSfx(scenes, duration),
   vo,
-  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - FINAL_PULSE, bpm: ep.style.bpm, progression: ep.style.progression, key: ep.style.key },
+  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - FINAL_PULSE, bpm: ep.style.bpm, progression: ep.style.progression, key: ep.style.key, genre: ep.style.world ?? 'neon' },
 };
 writeFileSync(join(buildDir, 'timeline.json'), JSON.stringify(timeline, null, 1));
 log(`timeline: ${duration.toFixed(1)} s, ${scenes.length} scenes, ${timeline.sfx.length} sound effects`);

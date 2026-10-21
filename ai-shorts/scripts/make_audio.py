@@ -317,7 +317,52 @@ def section(t):
         s["arp"] = 1
     return s
 
-kick_s, clap_s = kick(), clap()
+# Each visual world has its own genre: same machinery, different patterns and sounds.
+GENRES = {
+    #            kick steps (of 16)          snare steps   hat step  hat swing arp      arp step bass       pad   pump  crush
+    "neon":      dict(kick=(0, 4, 8, 12),     snare=(4, 12), hat=2, swing=0.0, arp="saw", arp_step=1, bass="off8", pad=1.0, pump=0.75, crush=0),
+    "liquid":    dict(kick=(0, 10),           snare=(8,),    hat=2, swing=0.35, arp="soft", arp_step=2, bass="long", pad=1.5, pump=0.35, crush=0),
+    "editorial": dict(kick=(0, 4, 8, 12),     snare=(4, 12), hat=1, swing=0.0, arp="pluck", arp_step=2, bass="stab", pad=0.5, pump=0.5, crush=0),
+    "synthwave": dict(kick=(0, 8),            snare=(4, 12), hat=2, swing=0.0, arp="saw", arp_step=1, bass="drive", pad=1.4, pump=0.45, crush=0),
+    "terminal":  dict(kick=(0, 6, 10),        snare=(4, 12), hat=1, swing=0.0, arp="square", arp_step=1, bass="sub", pad=0.4, pump=0.6, crush=6),
+}
+G = GENRES.get(MUSIC.get("genre", "neon"), GENRES["neon"])
+grng = np.random.default_rng(int(MUSIC.get("bpm", 120)) * 31 + int(MUSIC.get("key", 0)))
+
+
+def snare_sound():
+    if MUSIC.get("genre") == "synthwave":
+        # big gated-reverb snare
+        t = t_axis(0.45)
+        body = bp(rng.standard_normal(len(t)), 180, 7000) * np.exp(-t * 9) + 0.5 * np.sin(2 * np.pi * 190 * t) * np.exp(-t * 18)
+        gated = wet(body * 0.6, IR_BIG, 0.9)[:, : int(0.32 * SR)]
+        return gated
+    if MUSIC.get("genre") == "liquid":
+        t = t_axis(0.08)  # rimshot click
+        return wet(np.sin(2 * np.pi * 1700 * t) * np.exp(-t * 90) * 0.35 + hp(rng.standard_normal(len(t)), 3000) * np.exp(-t * 120) * 0.2, IR_SMALL, 0.4)
+    return wet(clap(), IR_SMALL, 0.5)
+
+
+def arp_note(f):
+    kind = G["arp"]
+    if kind == "soft":
+        t = t_axis(0.5)
+        return wet(np.sin(2 * np.pi * f * t) * np.exp(-t * 5) * 0.12, IR_BIG, 0.5)
+    if kind == "square":
+        t = t_axis(0.12)
+        return np.sign(np.sin(2 * np.pi * f * t)) * np.exp(-t * 30) * 0.06
+    if kind == "pluck":
+        t = t_axis(0.14)
+        return lp(saw(f, t), 4500) * np.exp(-t * 30) * 0.15
+    return pluck(f)
+
+
+def crush(x, bits):
+    return np.round(x * bits) / bits if bits else x
+
+
+kick_s = kick(0.75 if MUSIC.get("genre") == "liquid" else 1.0)
+snare_s = snare_sound()
 step = BEAT / 4
 pump = np.ones(N)
 n_steps = int(DUR / step)
@@ -326,33 +371,53 @@ for k in range(n_steps):
     s = section(t)
     bar = int(t // (BEAT * 4)) % 4
     pos16 = k % 16
-    if s["kick"] and pos16 % 4 == 0:
-        add(music, kick_s, t, 0.9 * s["kick"])
+    swing = G["swing"] * step if pos16 % 4 == 2 else 0
+    if s["kick"] and pos16 in G["kick"]:
+        add(music, crush(kick_s, G["crush"]), t, 0.9 * s["kick"])
         i = int(t * SR)
-        e = 1 - 0.75 * np.exp(-np.arange(int(BEAT * SR)) / SR * 9)  # sidechain pump
+        e = 1 - G["pump"] * np.exp(-np.arange(int(BEAT * SR)) / SR * 9)  # sidechain pump
         pump[i:i + len(e)] = np.minimum(pump[i:i + len(e)], e[: max(0, N - i)])
-    if s["clap"] and pos16 in (4, 12):
-        add(music, wet(clap_s, IR_SMALL, 0.5), t, 0.55)
-    if s["hat"] and pos16 % 2 == 0:
-        add(music, hat(pos16 % 4 == 2), t, 0.9 * s["hat"], pan=0.3 if pos16 % 4 else -0.3)
-    if s["arp"]:
+    if s["clap"] and pos16 in G["snare"]:
+        add(music, snare_s, t, 0.55)
+    if s["hat"] and pos16 % G["hat"] == 0:
+        h = hat(pos16 % 4 == 2)
+        if G["crush"] and grng.random() < 0.15:  # glitch stutter
+            h = np.tile(h[: int(0.02 * SR)], 3)
+        add(music, crush(h, G["crush"]), t + swing, 0.9 * s["hat"], pan=0.3 if pos16 % 4 else -0.3)
+    if s["arp"] and pos16 % G["arp_step"] == 0:
         notes = CHORDS[bar] + [CHORDS[bar][0] * 2]
-        f = notes[[0, 1, 2, 3, 2, 1, 3, 2][pos16 % 8]] * 2
-        add(music, pluck(f), t, 0.9, pan=0.5 if pos16 % 2 else -0.5)
+        idx = [0, 1, 2, 3, 2, 1, 3, 2][(pos16 // G["arp_step"]) % 8]
+        if G["arp"] == "square":
+            idx = int(grng.integers(0, 4))
+        f = notes[idx] * 2
+        add(music, arp_note(f), t + swing, 0.9, pan=0.5 if pos16 % 2 else -0.5)
 
-# bass: off-beat 8ths with sidechain feel
+# bass, shaped by genre
 bass = np.zeros(N)
-tt = np.arange(N) / SR
 for b in range(int(DUR / (BEAT * 4)) + 1):
     t0 = b * BEAT * 4
     root = ROOTS[b % 4]
-    for e8 in range(8):
-        t = t0 + e8 * BEAT / 2
+    style = G["bass"]
+    if style == "long":
+        hits = [(0, BEAT * 4)]
+    elif style == "stab":
+        hits = [(e * BEAT / 2, BEAT / 2 * 0.4) for e in (0, 3, 4, 6)]
+    elif style == "drive":
+        hits = [(e * BEAT / 2, BEAT / 2 * 0.95) for e in range(8)]
+    elif style == "sub":
+        hits = [(0, BEAT * 1.5), (BEAT * 2.5, BEAT * 1.5)]
+    else:
+        hits = [(e * BEAT / 2, BEAT / 2 * 0.9) for e in range(1, 8, 2)] + [(e * BEAT / 2, BEAT / 2 * 0.9) for e in range(0, 8, 2)]
+    for off, ln in hits:
+        t = t0 + off
         s = section(t)
         if not s["bass"]:
             continue
-        seg = t_axis(BEAT / 2 * 0.9)
-        x = lp(saw(root, seg) + 0.6 * np.sin(2 * np.pi * root / 2 * seg), 420) * np.exp(-seg * 5)
+        seg = t_axis(ln)
+        if style in ("long", "sub"):
+            x = np.sin(2 * np.pi * root * seg) * np.minimum(1, seg / 0.05) * np.minimum(1, (ln - seg) / 0.1) * 0.9
+        else:
+            x = lp(saw(root, seg) + 0.6 * np.sin(2 * np.pi * root / 2 * seg), 420 if style != "drive" else 900) * np.exp(-seg * (5 if style != "drive" else 2))
         i = int(t * SR)
         n = min(len(x), N - i)
         if n > 0:
@@ -363,7 +428,7 @@ music += np.stack([bass, bass])
 for b in range(int(DUR / (BEAT * 4))):
     t0 = b * BEAT * 4
     if section(t0 + 0.1)["pad"]:
-        add(music, pad_chord(CHORDS[b % 4], BEAT * 4 + 0.5), t0, 1.0)
+        add(music, pad_chord(CHORDS[b % 4], BEAT * 4 + 0.5), t0, G["pad"])
 
 music *= pump  # whole bed breathes with the kick
 music = np.stack([wet(music[0], IR_SMALL, 0.15)[0][:N], wet(music[1], IR_SMALL, 0.15)[1][:N]])

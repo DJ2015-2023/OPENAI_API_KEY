@@ -1,9 +1,11 @@
 import React from 'react';
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from 'remotion';
 import type { TimedScene, Timeline } from './types';
-import { C, FPS, W, H, HEAD, S, TimelineCtx, applyStyle, clamp, easeIn, easeOut, impactEnergy, noise1, prog, rgba } from './lib';
+import { C, FPS, W, H, HEAD, S, THEME, TimelineCtx, applyStyle, variantOf, clamp, easeIn, easeOut, impactEnergy, noise1, prog, rgba } from './lib';
 import { Canvas } from './components/canvas';
 import { Captions } from './components/captions';
+import { WorldBackdrop } from './components/worlds';
+import { CardsB, HookB, ListB, OutroB, RevealB, StatB } from './scenes/graphic';
 import { mono, sora } from './components/type';
 import { Hook } from './scenes/Hook';
 import { Reveal } from './scenes/Reveal';
@@ -12,6 +14,9 @@ import { Stat } from './scenes/Stat';
 import { Cards } from './scenes/Cards';
 import { Outro } from './scenes/Outro';
 
+const SCENES_B: Record<TimedScene['type'], React.FC<{ s: any }>> = {
+  hook: HookB, reveal: RevealB, list: ListB, stat: StatB, cards: CardsB, outro: OutroB,
+};
 const SCENES: Record<TimedScene['type'], React.FC<{ s: any }>> = {
   hook: Hook, reveal: Reveal, list: List, stat: Stat, cards: Cards, outro: Outro,
 };
@@ -81,7 +86,7 @@ const Grain: React.FC = () => {
   return (
     <Canvas
       deps={[frame]}
-      style={{ mixBlendMode: 'overlay', opacity: 0.2, pointerEvents: 'none' }}
+      style={{ mixBlendMode: THEME.dark ? 'overlay' : 'multiply', opacity: THEME.grain, pointerEvents: 'none' }}
       draw={(ctx, w, h) => {
         const tile = 180;
         const img = ctx.createImageData(tile, tile);
@@ -112,7 +117,28 @@ const Hud: React.FC<{ tl: Timeline }> = ({ tl }) => {
   const corner = (r: number) => (
     <div style={{ position: 'absolute', width: 70, height: 70, borderColor: `${C.cyan}99`, borderStyle: 'solid', borderWidth: 0, transform: `rotate(${r}deg)`, borderTopWidth: 3, borderLeftWidth: 3 }} />
   );
-  if (S.hud === 'minimal') {
+  if (THEME.world === 'editorial') {
+    return (
+      <AbsoluteFill style={{ opacity: p, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 110, left: 60, right: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '4px solid #111', paddingBottom: 12 }}>
+          <div style={{ fontFamily: HEAD.family, fontSize: 52, fontWeight: 800, color: '#111', letterSpacing: '-0.02em', lineHeight: 1 }}>AI NEWS</div>
+          <div style={{ fontFamily: mono, fontSize: 22, color: '#111', letterSpacing: '0.2em' }}>DAILY BRIEFING</div>
+        </div>
+      </AbsoluteFill>
+    );
+  }
+  if (THEME.world === 'terminal') {
+    const typed = 'ai_news --live --source=web';
+    const n = Math.floor(clamp((t - on) / 1.2) * typed.length);
+    return (
+      <AbsoluteFill style={{ opacity: p, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 120, left: 60, right: 60, fontFamily: mono, fontSize: 28, color: C.cyan, borderBottom: `2px solid ${rgba(C.cyan, 0.5)}`, paddingBottom: 14 }}>
+          {'root@ainews:~$ '}{typed.slice(0, n)}<span style={{ opacity: Math.sin(t * 10) > 0 ? 1 : 0 }}>█</span>
+        </div>
+      </AbsoluteFill>
+    );
+  }
+  if (S.hud === 'minimal' || THEME.world === 'liquid') {
     return (
       <AbsoluteFill style={{ opacity: p, pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', top: 130, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 14, alignItems: 'center', fontFamily: mono, fontSize: 24, letterSpacing: '0.4em', color: '#e6f2ff' }}>
@@ -177,9 +203,10 @@ export const Video: React.FC<{ timeline: Timeline }> = ({ timeline: tl }) => {
     <TimelineCtx.Provider value={tl}>
       <AbsoluteFill style={{ background: C.bg, overflow: 'hidden' }}>
         <AbsoluteFill style={{ transform: `translate(${sx}px, ${sy}px) rotate(${rot}deg) scale(${zoom})` }}>
+          <WorldBackdrop />
           {tl.scenes.map((s, i) => {
             if (t < s.start - PAD || t > s.end + PAD) return null;
-            const S = SCENES[s.type];
+            const S = (variantOf(s.type) === 'B' ? SCENES_B : SCENES)[s.type];
             return (
               <SceneShell key={i} start={s.start} end={s.end} first={i === 0} last={i === tl.scenes.length - 1}>
                 <S s={s} />
@@ -192,7 +219,7 @@ export const Video: React.FC<{ timeline: Timeline }> = ({ timeline: tl }) => {
           <Hud tl={tl} />
         </AbsoluteFill>
         <Captions tl={tl} />
-        <AbsoluteFill style={{ background: 'radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,0.75) 100%)', pointerEvents: 'none' }} />
+        {THEME.vignette > 0 && <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,${THEME.vignette}) 100%)`, pointerEvents: 'none' }} />}
         <Grain />
         {tl.audio && <Audio src={staticFile(tl.audio)} />}
       </AbsoluteFill>

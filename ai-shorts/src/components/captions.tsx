@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import type { Timeline } from '../types';
-import { C, FPS, HEAD, S, clamp, prog, rgba } from '../lib';
+import { C, FPS, HEAD, S, THEME, clamp, prog, rgba } from '../lib';
 import { fitText, headWeight } from './type';
 
 // Most Shorts are watched muted: every spoken word appears, the current one highlighted.
@@ -35,7 +35,14 @@ export const Captions: React.FC<{ tl: Timeline }> = ({ tl }) => {
             display: 'inline-block', color: spoken ? '#ffffff' : 'rgba(255,255,255,0.55)', padding: '0 0.08em',
             textShadow: '0 4px 0 rgba(0,0,0,0.55), 0 0 24px rgba(0,0,0,0.9)', WebkitTextStroke: '2px rgba(0,0,0,0.65)',
           };
-          if (active && S.motion === 'impact') {
+          if (THEME.world === 'editorial') {
+            // print style: dark ink, the spoken word gets a solid color block
+            Object.assign(base, { color: spoken ? '#111' : 'rgba(0,0,0,0.4)', textShadow: 'none', WebkitTextStroke: '0px' });
+            if (active) Object.assign(base, { color: '#fff', background: C.blue });
+          } else if (THEME.world === 'terminal') {
+            Object.assign(base, { color: spoken ? C.cyan : rgba(C.cyan, 0.35), WebkitTextStroke: '0px', textShadow: `0 0 14px ${rgba(C.cyan, 0.8)}` });
+            if (active) Object.assign(base, { color: '#000', background: C.cyan, textShadow: 'none' });
+          } else if (active && S.motion === 'impact') {
             // filled box behind the word
             Object.assign(base, { color: '#fff', background: C.blue, borderRadius: 10, boxShadow: `0 0 30px ${rgba(C.blue, 0.7)}`, WebkitTextStroke: '0px', transform: 'rotate(-2deg) scale(1.08)' });
           } else if (active && S.motion === 'digital') {

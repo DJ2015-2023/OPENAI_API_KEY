@@ -59,6 +59,23 @@ export const S: Style = {
 };
 export const HEAD = { family: 'Sora', em: 0.74 };
 
+/** How the active world treats text and the frame. Filled by applyStyle. */
+export const THEME = {
+  world: 'neon' as NonNullable<Style['world']>,
+  dark: true, // light worlds (editorial) use dark text on a light page
+  ink: '#ffffff', // main text color for flat fills
+  glow: 1, // 0 = no glow
+  chroma: true, // RGB split on headline entry
+  grain: 0.2,
+  vignette: 0.75,
+  page: '#02040b', // base background
+};
+
+export const variantOf = (type: string): 'A' | 'B' => {
+  if (S.world && S.world !== 'neon') return 'B'; // the immersive sets carry their own neon backdrops
+  return (S.variants?.[type as keyof NonNullable<Style['variants']>] as 'A' | 'B') ?? 'A';
+};
+
 export function applyStyle(tl: { palette?: Palette; style?: Style }) {
   if (tl.style) {
     Object.assign(S, tl.style);
@@ -67,7 +84,29 @@ export function applyStyle(tl: { palette?: Palette; style?: Style }) {
     setPalette(tl.palette ?? 'electric');
   }
   Object.assign(HEAD, FONTS[S.font] ?? FONTS.sora);
+  const w = S.world ?? 'neon';
+  const page = {
+    neon: C.bg,
+    liquid: hslHex(S.hue, 45, 9),
+    editorial: hslHex(S.hue, 28, 92),
+    synthwave: hslHex(S.hue + 260, 70, 7),
+    terminal: '#020403',
+  }[w];
+  Object.assign(THEME, {
+    world: w,
+    dark: w !== 'editorial',
+    ink: w === 'editorial' ? '#111111' : w === 'terminal' ? C.cyan : '#ffffff',
+    glow: { neon: 1, liquid: 0.45, editorial: 0, synthwave: 1.2, terminal: 0.8 }[w],
+    chroma: w === 'neon' || w === 'synthwave' || w === 'terminal',
+    grain: { neon: 0.2, liquid: 0.12, editorial: 0.28, synthwave: 0.18, terminal: 0.3 }[w],
+    vignette: { neon: 0.75, liquid: 0.5, editorial: 0, synthwave: 0.6, terminal: 0.9 }[w],
+    page,
+  });
+  if (w === 'terminal') Object.assign(HEAD, { family: 'JetBrains Mono', em: 0.62 });
+  C.bg = page;
 }
+
+export const hslHex = (h: number, s: number, l: number) => hsl(h, s, l);
 
 /** hex (#rrggbb) → rgba() string. */
 export function rgba(hex: string, a: number) {
