@@ -96,17 +96,5 @@
       "title": "TechCrunch — Google releases Gemini 4 Argon",
       "url": "https://techcrunch.com/2026/09/30/google-releases-gemini-4-argon-called-its-most-powerful-model-yet/"
     }
-  ],
-  "style": {
-    "hue": 116,
-    "harmony": "split",
-    "font": "syne",
-    "transition": "glitch",
-    "hud": "minimal",
-    "motion": "digital",
-    "camera": "calm",
-    "bpm": 116,
-    "progression": 3,
-    "key": 3
-  }
+  ]
 }
