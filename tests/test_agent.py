@@ -47,6 +47,8 @@ class FakeTG:
 
 
 class FakeLLM:
+    supports_images = True
+
     def __init__(self):
         self.calls = []
 
@@ -296,4 +298,38 @@ def test_channel_id_as_owner_is_rejected(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
     monkeypatch.setenv("OWNER_CHAT_ID", "-1001234567890")
     with pytest.raises(SystemExit, match="canal o grupo"):
+        load_settings()
+
+
+def test_yandex_request_format():
+    from agent.llm import LLM
+    reply = {"result": {"alternatives": [{"message": {"role": "assistant", "text": " привет "}}]}}
+    s = FakeSession([FakeResponse(reply)])
+    llm = LLM("yandex", "AQVN-key", "yandexgpt/latest", session=s, folder_id="b1gfolder")
+    assert not llm.supports_images
+    assert llm.complete("sys", "prompt", image=b"IMG") == "привет"
+    url, kw = s.calls[0]
+    assert url.endswith("/foundationModels/v1/completion")
+    assert kw["headers"] == {"Authorization": "Api-Key AQVN-key", "x-folder-id": "b1gfolder"}
+    assert kw["json"]["modelUri"] == "gpt://b1gfolder/yandexgpt/latest"
+    assert kw["json"]["messages"][0] == {"role": "system", "text": "sys"}
+    assert "SU1H" not in json.dumps(kw["json"])
+
+
+def test_photo_with_text_only_llm_uses_hint_and_skips_download(tmp_path):
+    app = make_app(tmp_path)
+    app.llm.supports_images = False
+    app.tg.download = lambda file_id: pytest.fail("no debe descargar la foto")
+    app.handle_update(owner_msg(photo=[{"file_id": "f1"}], caption="#cards крем для рук"))
+    _, prompt, image = app.llm.calls[0]
+    assert image is None and "крем для рук" in prompt and "не додумывай" in prompt
+
+
+def test_yandex_settings_require_folder(monkeypatch):
+    from agent.config import load_settings
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "t")
+    monkeypatch.setenv("LLM_PROVIDER", "yandex")
+    monkeypatch.setenv("YANDEX_API_KEY", "k")
+    monkeypatch.delenv("YANDEX_FOLDER_ID", raising=False)
+    with pytest.raises(SystemExit, match="YANDEX_FOLDER_ID"):
         load_settings()

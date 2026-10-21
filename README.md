@@ -42,8 +42,18 @@ Se publica en el canal de Telegram + muro de VK, y te devuelve el texto para peg
 
 > Si de momento solo configuras Telegram, el agente funciona igual; VK se activa en cuanto pongas sus variables.
 
-### 3. Clave de IA
-Pon `OPENAI_API_KEY` **o** `ANTHROPIC_API_KEY`. Ojo: OpenAI y Anthropic no dan servicio desde Rusia, así que el agente tiene que correr en un **servidor fuera de Rusia** (ver abajo) y la cuenta se paga con una tarjeta extranjera.
+### 3. Clave de IA (elige una)
+
+**YandexGPT (recomendado en Rusia: se paga con tarjeta rusa y no necesita VPN)**
+1. Entra en [console.yandex.cloud](https://console.yandex.cloud) con tu cuenta de Yandex y crea una **cuenta de facturación** (платёжный аккаунт). A las cuentas nuevas se les suele dar un saldo de prueba.
+2. Abre la carpeta `default` y copia su **ID** (empieza por `b1g…`) → `YANDEX_FOLDER_ID`.
+3. En esa carpeta: **Сервисные аккаунты → Создать** → nombre `agente-dr`, rol **`ai.languageModels.user`**.
+4. Entra en el service account → **Создать новый ключ → Создать API-ключ** (área `yc.ai.languageModels.execute`) → copia el secreto (empieza por `AQVN…`) → `YANDEX_API_KEY`.
+5. En `.env` pon `LLM_PROVIDER=yandex`.
+
+> YandexGPT no ve las imágenes: el texto se escribe a partir de la nota que pongas en el pie de la foto y de la rúbrica. Escribe siempre una nota corta.
+
+**OpenAI o Anthropic:** pon `OPENAI_API_KEY` o `ANTHROPIC_API_KEY` y `LLM_PROVIDER=openai`/`anthropic`. Ninguno da servicio desde Rusia: necesitan VPN o un servidor fuera de Rusia, y se pagan con tarjeta extranjera.
 
 ### 4. Ejecutar
 

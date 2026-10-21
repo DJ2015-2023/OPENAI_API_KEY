@@ -15,7 +15,7 @@ def main() -> None:
     app = App(
         settings=s,
         store=Store(s.db_path),
-        llm=LLM(s.llm_provider, s.llm_api_key, s.llm_model),
+        llm=LLM(s.llm_provider, s.llm_api_key, s.llm_model, folder_id=s.yandex_folder_id),
         tg=TelegramAPI(s.telegram_token),
         vk_publisher=VKPublisher(VKAPI(s.vk_user_token), s.vk_group_id) if s.vk_posting_enabled else None,
         vk_messenger=VKMessenger(VKAPI(s.vk_group_token), s.vk_group_id) if s.vk_messages_enabled else None,

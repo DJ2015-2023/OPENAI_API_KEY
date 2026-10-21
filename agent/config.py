@@ -7,6 +7,12 @@ from pathlib import Path
 DEFAULT_MODELS = {
     "anthropic": "claude-sonnet-5-5",
     "openai": "gpt-4o-mini",
+    "yandex": "yandexgpt/latest",
+}
+API_KEY_VARS = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "yandex": "YANDEX_API_KEY",
 }
 
 
@@ -37,6 +43,7 @@ class Settings:
     timezone: str
     db_path: str
     brand: dict
+    yandex_folder_id: str = ""
 
     @property
     def vk_posting_enabled(self) -> bool:
@@ -51,17 +58,18 @@ def load_settings() -> Settings:
     load_dotenv()
     env = os.environ
 
-    provider = env.get("LLM_PROVIDER", "").lower() or (
-        "anthropic" if env.get("ANTHROPIC_API_KEY") else "openai"
+    provider = env.get("LLM_PROVIDER", "").lower() or next(
+        (p for p in ("anthropic", "yandex") if env.get(API_KEY_VARS[p])), "openai"
     )
     if provider not in DEFAULT_MODELS:
-        raise SystemExit(f"LLM_PROVIDER debe ser 'openai' o 'anthropic', no '{provider}'")
-    api_key = env.get("ANTHROPIC_API_KEY" if provider == "anthropic" else "OPENAI_API_KEY", "")
+        raise SystemExit(f"LLM_PROVIDER debe ser 'openai', 'anthropic' o 'yandex', no '{provider}'")
+    api_key = env.get(API_KEY_VARS[provider], "")
 
-    missing = [name for name, value in [
-        ("TELEGRAM_BOT_TOKEN", env.get("TELEGRAM_BOT_TOKEN")),
-        ("OPENAI_API_KEY o ANTHROPIC_API_KEY", api_key),
-    ] if not value]
+    required = [("TELEGRAM_BOT_TOKEN", env.get("TELEGRAM_BOT_TOKEN")),
+                (API_KEY_VARS[provider], api_key)]
+    if provider == "yandex":
+        required.append(("YANDEX_FOLDER_ID", env.get("YANDEX_FOLDER_ID")))
+    missing = [name for name, value in required if not value]
     if missing:
         raise SystemExit("Faltan variables de entorno: " + ", ".join(missing))
 
@@ -91,4 +99,5 @@ def load_settings() -> Settings:
         timezone=env.get("TIMEZONE", "Europe/Moscow"),
         db_path=db_path,
         brand=brand,
+        yandex_folder_id=env.get("YANDEX_FOLDER_ID", ""),
     )

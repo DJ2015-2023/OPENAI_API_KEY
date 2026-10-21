@@ -128,9 +128,10 @@ class App:
         self.send_preview(self.store.get_post(post_id))
 
     def generate(self, pillar: str, hint: str, media_type: str | None, file_id: str | None) -> str:
-        image = self.tg.download(file_id) if media_type == "photo" and file_id else None
-        return copywriter.write_post(self.llm, self.brand, pillar, hint,
-                                     image=image, has_video=media_type == "video")
+        has_photo = media_type == "photo" and bool(file_id)
+        image = self.tg.download(file_id) if has_photo and self.llm.supports_images else None
+        return copywriter.write_post(self.llm, self.brand, pillar, hint, image=image,
+                                     has_video=media_type == "video", has_photo=has_photo)
 
     def send_preview(self, post: dict) -> None:
         if post["media_file_id"]:

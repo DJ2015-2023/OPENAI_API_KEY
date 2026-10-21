@@ -1,4 +1,4 @@
-"""Cliente mínimo de IA: funciona con OpenAI o con Anthropic (Claude), con imagen opcional."""
+"""Cliente mínimo de IA: OpenAI, Anthropic (Claude) o YandexGPT, con imagen opcional (no en YandexGPT)."""
 import base64
 
 import requests
@@ -9,16 +9,24 @@ class LLMError(RuntimeError):
 
 
 class LLM:
-    def __init__(self, provider: str, api_key: str, model: str, session: requests.Session | None = None):
+    def __init__(self, provider: str, api_key: str, model: str, session: requests.Session | None = None,
+                 folder_id: str = ""):
         self.provider = provider
         self.api_key = api_key
         self.model = model
+        self.folder_id = folder_id
         self.http = session or requests.Session()
+
+    @property
+    def supports_images(self) -> bool:
+        return self.provider != "yandex"
 
     def complete(self, system: str, prompt: str, image: bytes | None = None,
                  media_type: str = "image/jpeg", max_tokens: int = 1200) -> str:
         if self.provider == "anthropic":
             return self._anthropic(system, prompt, image, media_type, max_tokens)
+        if self.provider == "yandex":
+            return self._yandex(system, prompt, max_tokens)
         return self._openai(system, prompt, image, media_type, max_tokens)
 
     def _anthropic(self, system, prompt, image, media_type, max_tokens) -> str:
@@ -56,3 +64,17 @@ class LLM:
         if r.status_code != 200:
             raise LLMError(f"OpenAI {r.status_code}: {data}")
         return (data["choices"][0]["message"]["content"] or "").strip()
+
+    def _yandex(self, system, prompt, max_tokens) -> str:
+        r = self.http.post(
+            "https://llm.api.cloud.yandex.net/foundationModels/v1/completion",
+            headers={"Authorization": f"Api-Key {self.api_key}", "x-folder-id": self.folder_id},
+            json={"modelUri": f"gpt://{self.folder_id}/{self.model}",
+                  "completionOptions": {"stream": False, "temperature": 0.6, "maxTokens": str(max_tokens)},
+                  "messages": [{"role": "system", "text": system}, {"role": "user", "text": prompt}]},
+            timeout=120,
+        )
+        data = r.json()
+        if r.status_code != 200:
+            raise LLMError(f"YandexGPT {r.status_code}: {data}")
+        return data["result"]["alternatives"][0]["message"]["text"].strip()
