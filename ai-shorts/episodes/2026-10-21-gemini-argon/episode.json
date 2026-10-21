@@ -1,0 +1,8 @@
+{
+  "id": "2026-10-21-gemini-argon",
+  "note": "Test upload of the first video (made by hand in gemini-argon-video/, downscaled to 1080x1920). Not built from the template, so there are no scenes here.",
+  "sources": [
+    { "title": "TechCrunch — Google releases Gemini 4 Argon", "url": "https://techcrunch.com/2026/09/30/google-releases-gemini-4-argon-called-its-most-powerful-model-yet/" },
+    { "title": "Forbes — Google's Gemini 4 Argon launch", "url": "https://www.forbes.com/sites/gabrielalinzainescu/2026/10/14/googles-gemini-4-argon-launch-puts-a-deadline-on-its-price-advantage/" }
+  ]
+}
