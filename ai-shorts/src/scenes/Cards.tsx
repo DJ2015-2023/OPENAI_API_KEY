@@ -4,7 +4,7 @@ import land from '../land.json';
 import type { CardsScene, TimedScene } from '../types';
 import { C, FPS, HEAD, W, clamp, cue, easeOut, mix, prog, rgba } from '../lib';
 import { Canvas, glowSprite } from '../components/canvas';
-import { Tag, Title, mono, sora } from '../components/type';
+import { Tag, Title, fitText, headWeight, mono, sora } from '../components/type';
 
 const CITIES: [number, number][] = [
   [-122.4, 37.8], [-74, 40.7], [-46.6, -23.5], [-0.1, 51.5], [2.35, 48.85], [13.4, 52.5], [31.2, 30.0], [28, -26.2],
@@ -57,7 +57,7 @@ const Card: React.FC<{ title: string; sub: string; at: number; icon: React.React
     >
       <div style={{ width: 84, height: 84, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${color}, ${C.violet})`, boxShadow: `0 0 30px ${color}88`, flexShrink: 0 }}>{icon}</div>
       <div>
-        <div style={{ fontFamily: HEAD.family, fontWeight: 800, fontSize: Math.min(50, 930 / Math.max(1, title.length * HEAD.em)), color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{title}</div>
+        <div style={{ fontFamily: HEAD.family, fontWeight: headWeight(800), whiteSpace: 'nowrap', fontSize: fitText(title, HEAD.family, headWeight(800), 50, 660), color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{title}</div>
         <div style={{ fontFamily: mono, fontSize: 22, color: '#a9d8ff', letterSpacing: '0.25em', marginTop: 8 }}>{sub}</div>
       </div>
     </div>
@@ -187,7 +187,7 @@ export const Cards: React.FC<{ s: TimedScene & CardsScene }> = ({ s }) => {
           <Title text={s.title} at={titleAt} size={110} variant="rise" />
         </div>
       </AbsoluteFill>
-      <AbsoluteFill style={{ paddingTop: n > 2 ? 1180 : 1300 }}>
+      <AbsoluteFill style={{ paddingTop: n > 2 ? 990 : 1090 }}>
         {s.cards.map((c, i) => (
           <Card
             key={i}

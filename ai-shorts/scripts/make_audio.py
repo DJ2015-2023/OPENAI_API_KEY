@@ -426,7 +426,7 @@ mix = music * 0.42 * duck + fx * 0.62 * (0.75 + 0.25 * duck) + vo_st * 1.0
 
 # master: fade-out tail and soft clip
 fade = np.ones(N)
-fs = int((DUR - 1.0) * SR)
+fs = int((DUR - 0.12) * SR)  # tiny fade only: the end loops back into the opening hit
 fade[fs:] = np.linspace(1, 0, N - fs) ** 1.5
 mix = mix * fade
 mix = np.tanh(mix * 1.1) / 1.1

@@ -3,6 +3,7 @@ import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from 'remotion';
 import type { TimedScene, Timeline } from './types';
 import { C, FPS, W, H, HEAD, S, TimelineCtx, applyStyle, clamp, easeIn, easeOut, impactEnergy, noise1, prog, rgba } from './lib';
 import { Canvas } from './components/canvas';
+import { Captions } from './components/captions';
 import { mono, sora } from './components/type';
 import { Hook } from './scenes/Hook';
 import { Reveal } from './scenes/Reveal';
@@ -59,6 +60,8 @@ const Flash: React.FC<{ tl: Timeline }> = ({ tl }) => {
   const t = useCurrentFrame() / FPS;
   let f = 0;
   for (const s of tl.scenes.slice(1)) f = Math.max(f, Math.exp(-Math.abs(t - s.start) * 14));
+  // Loop seam: the video ends on a white flash and opens out of one, so a replay feels continuous.
+  f = Math.max(f, clamp(1 - t / 0.3), clamp((t - (tl.duration - 0.3)) / 0.3));
   const first = tl.scenes[0].cues[0];
   if (t >= first) f = Math.max(f, Math.exp(-(t - first) * 6));
   const e = clamp(impactEnergy(tl.sfx, t) * 0.5);
@@ -103,8 +106,7 @@ const Hud: React.FC<{ tl: Timeline }> = ({ tl }) => {
   const t = useCurrentFrame() / FPS;
   const on = tl.scenes[0].cues[0] + 0.35;
   const p = prog(t, on, 0.7);
-  const out = prog(t, tl.duration - 1.8, 0.5, easeIn);
-  if (p <= 0 || out >= 1) return null;
+  if (p <= 0) return null;
   const live = Math.sin(t * Math.PI * 2) > -0.2;
   const ticker = `${tl.ticker.toUpperCase()}  •  `;
   const corner = (r: number) => (
@@ -112,7 +114,7 @@ const Hud: React.FC<{ tl: Timeline }> = ({ tl }) => {
   );
   if (S.hud === 'minimal') {
     return (
-      <AbsoluteFill style={{ opacity: p * (1 - out), pointerEvents: 'none' }}>
+      <AbsoluteFill style={{ opacity: p, pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', top: 130, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 14, alignItems: 'center', fontFamily: mono, fontSize: 24, letterSpacing: '0.4em', color: '#e6f2ff' }}>
           <div style={{ width: 12, height: 12, borderRadius: 6, background: live ? '#ff3b5c' : '#5a1020' }} />
           AI NEWS
@@ -123,7 +125,7 @@ const Hud: React.FC<{ tl: Timeline }> = ({ tl }) => {
   }
   if (S.hud === 'badge') {
     return (
-      <AbsoluteFill style={{ opacity: p * (1 - out), pointerEvents: 'none' }}>
+      <AbsoluteFill style={{ opacity: p, pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', top: 120, left: 60, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 26px', borderRadius: 999, background: `linear-gradient(90deg, ${C.blue}, ${C.violet})`, boxShadow: `0 0 40px ${rgba(C.violet, 0.5)}`, transform: `translateX(${(1 - p) * -300}px)`, fontFamily: HEAD.family, fontSize: 30, color: '#fff', letterSpacing: '0.06em' }}>
           <div style={{ width: 14, height: 14, borderRadius: 7, background: live ? '#fff' : 'rgba(255,255,255,0.4)' }} />
           AI NEWS · LIVE
@@ -135,7 +137,7 @@ const Hud: React.FC<{ tl: Timeline }> = ({ tl }) => {
     );
   }
   return (
-    <AbsoluteFill style={{ opacity: p * (1 - out), pointerEvents: 'none' }}>
+    <AbsoluteFill style={{ opacity: p, pointerEvents: 'none' }}>
       <div style={{ position: 'absolute', top: 120, left: 60, right: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: mono, fontSize: 26, color: '#cfe9ff', letterSpacing: '0.2em', transform: `translateY(${(1 - p) * -40}px)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ width: 16, height: 16, borderRadius: 8, background: live ? '#ff3b5c' : '#5a1020', boxShadow: live ? '0 0 18px #ff3b5c' : 'none' }} />
@@ -170,12 +172,11 @@ export const Video: React.FC<{ timeline: Timeline }> = ({ timeline: tl }) => {
   const sy = noise1(t * 0.3, 3) * 24 * drift + noise1(t * 22, 4) * e * 16;
   const rot = noise1(t * 0.25, 5) * 0.9 * drift + noise1(t * 18, 6) * e * 0.8;
   const zoom = 1.04 + 0.02 * Math.sin(t * 0.8) + e * 0.05;
-  const fade = 1 - prog(t, tl.duration - 0.9, 0.85, easeIn);
 
   return (
     <TimelineCtx.Provider value={tl}>
       <AbsoluteFill style={{ background: C.bg, overflow: 'hidden' }}>
-        <AbsoluteFill style={{ transform: `translate(${sx}px, ${sy}px) rotate(${rot}deg) scale(${zoom})`, opacity: fade }}>
+        <AbsoluteFill style={{ transform: `translate(${sx}px, ${sy}px) rotate(${rot}deg) scale(${zoom})` }}>
           {tl.scenes.map((s, i) => {
             if (t < s.start - PAD || t > s.end + PAD) return null;
             const S = SCENES[s.type];
@@ -187,9 +188,10 @@ export const Video: React.FC<{ timeline: Timeline }> = ({ timeline: tl }) => {
           })}
           <Flash tl={tl} />
         </AbsoluteFill>
-        <AbsoluteFill style={{ opacity: fade }}>
+        <AbsoluteFill>
           <Hud tl={tl} />
         </AbsoluteFill>
+        <Captions tl={tl} />
         <AbsoluteFill style={{ background: 'radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,0.75) 100%)', pointerEvents: 'none' }} />
         <Grain />
         {tl.audio && <Audio src={staticFile(tl.audio)} />}

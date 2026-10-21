@@ -167,7 +167,7 @@ export const Hook: React.FC<{ s: TimedScene & HookScene }> = ({ s }) => {
       />
 
       <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ width: W, transform: `translateY(${-160 - lift * 260}px) scale(${1 - lift * 0.18})` }}>
+        <div style={{ width: W, transform: `translateY(${-280 - lift * 230}px) scale(${1 - lift * 0.18})` }}>
           <Tag text={s.kicker} at={boom + 0.05} color="#ff3b5c" style={{ marginBottom: 26 }} />
           {s.title.map((line, i) => (
             <Title key={i} text={line} at={boom + i * 0.12} size={150} variant="slam" gradient={i % 2 ? `linear-gradient(180deg,#fff 10%,${C.cyan} 60%,${C.blue})` : undefined} />
@@ -175,7 +175,7 @@ export const Hook: React.FC<{ s: TimedScene & HookScene }> = ({ s }) => {
         </div>
       </AbsoluteFill>
       <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ width: W, transform: 'translateY(260px)' }}>
+        <div style={{ width: W, transform: 'translateY(130px)' }}>
           {s.lines.map((line, i) => {
             const style = i % 3;
             return (

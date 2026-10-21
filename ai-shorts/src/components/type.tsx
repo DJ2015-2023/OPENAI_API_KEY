@@ -46,6 +46,19 @@ const GLYPHS = '01<>/{}[]#$%&*+=?ABCDEFGHJKLMNPQRSTUVWXYZ';
  * Kinetic headline. Letters arrive individually (blur → sharp, offset → home),
  * with an RGB-split on entry and a clean push-out on exit.
  */
+// Text is measured with the real font (loaded before the first frame), so any headline
+// length and any of the style's fonts fit on screen.
+let measureCtx: CanvasRenderingContext2D | null = null;
+/** Weight to request for the headline face: the extra fonts ship a single weight. */
+export const headWeight = (w: number | string) => (S.font === 'sora' ? w : 'normal');
+export function fitText(text: string, family: string, weight: number | string, wanted: number, maxW = 960, trackingEm = 0) {
+  if (typeof document === 'undefined') return wanted;
+  measureCtx ??= document.createElement('canvas').getContext('2d');
+  measureCtx!.font = `${weight} 100px "${family}"`;
+  const w = measureCtx!.measureText(text).width + trackingEm * 100 * [...text].length;
+  return Math.min(wanted, (maxW * 100) / Math.max(1, w));
+}
+
 // The episode style decides how headlines enter: hard slams, digital decoding, or soft rises.
 const MOTION: Record<string, Partial<Record<Variant, Variant>>> = {
   impact: {},
@@ -61,8 +74,9 @@ export const Title: React.FC<Props> = ({
   const head = !font || font === sora; // headline face comes from the episode style
   const variant = (head ? MOTION[S.motion]?.[asked] : undefined) ?? asked;
   // Auto-fit: headlines come from the news agent, so their length varies.
-  const em = (font === mono ? 0.62 : head ? HEAD.em : weight >= 700 ? 0.74 : 0.66) + tracking + (variant === 'wide' ? 0.05 : 0);
-  const size = Math.min(wanted, 980 / Math.max(1, chars.length * em));
+  const family = head ? HEAD.family : font!;
+  const fw = head ? headWeight(weight) : weight;
+  const size = fitText(text, family, fw, wanted, 950, tracking);
   const st = stagger ?? (variant === 'slam' ? 0.018 : variant === 'decode' ? 0.028 : 0.03);
   const exitP = out ? prog(t, out, 0.35, easeIn) : 0;
   if (t < at - 0.05 || exitP >= 1) return null;
@@ -129,7 +143,7 @@ export const Title: React.FC<Props> = ({
   return (
     <div
       style={{
-        position: 'relative', width: '100%', height: size * 1.25, fontFamily: head ? HEAD.family : font, fontWeight: head && S.font !== 'sora' ? 'normal' : weight, fontSize: size,
+        position: 'relative', width: '100%', height: size * 1.25, fontFamily: family, fontWeight: fw, fontSize: size,
         letterSpacing: `${tracking + (1 - entryAll) * (variant === 'wide' ? 0.25 : 0.06)}em`, lineHeight: 1, perspective: 800,
         ...style,
       }}

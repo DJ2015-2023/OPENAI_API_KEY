@@ -26,14 +26,19 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
    channel's last 30 uploads; this is the source of truth). Also glance at `published.jsonl` and
    `episodes/` if they have anything.
 
-3. **Research.** Search the web (use `mode: "extended"`) for AI news from the last 24–48 h.
-   Pick the story most likely to matter to a general tech audience: major model launches,
-   big product features, funding/policy with real impact, notable research. Confirm it with
+3. **Research.** Search the web (use `mode: "extended"`) for AI news from the last 24–48 h,
+   newest first. List 5–8 candidates and score each 1–5 on:
+   - **Reach:** a name everyone knows (OpenAI, Google, Apple, Nvidia, Meta, Tesla…) or something
+     that touches ordinary people (jobs, money, phones, school, privacy).
+   - **Surprise:** a "wait, what?" angle: a record, a reversal, a big number, a first.
+   - **Stakes / debate:** something people will argue about in the comments.
+   - **Freshness:** hours old beats a day old.
+   Pick the two highest totals that also pass the sourcing rule. Confirm each with
    at least two independent sources, one of them primary when one exists. Pick the two best
    stories; `a` and `b` must be different stories (and ideally different companies).
 
 4. **Write** `episodes/<YYYY-MM-DD>-a/episode.json` and `episodes/<YYYY-MM-DD>-b/episode.json`. The schema is in `src/types.ts`;
-   `episodes/2026-10-20-a/episode.json` is a full example.
+   `episodes/2026-10-21-example/episode.json` is a full example of the format.
    - Scenes: `hook` first, `outro` last, 4–6 scenes in total. Mix the middle types
      (`reveal`, `list`, `stat`, `cards`) to fit the story. **Every video must be unique:** the
      build refuses a scene layout (e.g. `HRLSO`) used by any of the last 10 videos, so vary
@@ -43,13 +48,25 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
      automatically (colors, headline font, transitions, news overlay, text animation, camera,
      tempo, key and chords), different from the recent videos, and records it in the
      YouTube description as a "Style ID" line. Leave that line in.
+   - **Length: 25–35 s, about 60–80 spoken words.** Shorter Shorts get watched to the end and
+     replayed, which is what the algorithm rewards. 4–5 scenes is usually right.
+   - **The first phrase is the hook and is spoken at 0.25 s.** It must make people stay: a
+     surprising claim, a big number or a direct question about the news ("Google's best AI is
+     about to cost twice as much."). Never a greeting, never "In today's news".
    - `vo`: one short phrase per on-screen element, in the order they appear. Each phrase is a
-     cue: the element appears when its phrase starts. Aim for 90–120 spoken words in total
-     (the video should land between 35 and 55 s). Write numbers the way they should be spoken
-     ("twenty twenty-seven", "one million").
+     cue: the element appears when its phrase starts, and every word is shown as a caption.
+     Write numbers the way they should be spoken ("twenty twenty-seven", "one million").
    - On-screen text: short and punchy (headline lines ≤ 16 characters work best).
-   - `outro.vo`: one phrase per name, then the headline, then "Follow for more A.I. news."
-   - `youtube.title` ≤ 100 characters and ends with `#Shorts`; `sources` lists every URL you used.
+   - **Outro:** `names` are the relevant competitors; `cta` is a short question to the viewer
+     that invites an opinion ("Would you pay double?"). `outro.vo`: one phrase per name, then
+     the headline, then the question plus "Tell me in the comments." (shown on screen as the
+     question with Comment and Follow buttons). The video ends on a flash that loops back into
+     the opening, so don't say goodbye.
+   - `youtube.title`: under 60 characters plus ` #Shorts`. Lead with the name or number that
+     makes people tap ("Gemini 4 Argon price DOUBLES Dec 1 #Shorts"). Curiosity is fine;
+     anything the video doesn't back up is not.
+   - `youtube.description`: first line repeats the hook as a full sentence; then 2–3 lines of
+     context. Tags: 5–8, most specific first. `sources` lists every URL you used.
 
 5. **Preview:** `node scripts/build.mjs episodes/<id> --no-render --stills`, then look at the
    `build/still_*.jpg` images. Fix overflowing or clashing text in episode.json and repeat.

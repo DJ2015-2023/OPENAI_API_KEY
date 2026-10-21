@@ -47,6 +47,7 @@ export type Timeline = {
   duration: number;
   audio: string; // path under public/
   scenes: TimedScene[];
+  captions?: { text: string; at: number; end: number; group: number }[];
   sfx: Sfx[];
   vo: { file: string; at: number }[];
   music: { breakdowns: [number, number][]; beatStart: number; finalHit: number; bpm?: number; progression?: number; key?: number };

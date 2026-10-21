@@ -1,0 +1,112 @@
+{
+  "id": "2026-10-21-example",
+  "ticker": "Gemini 4 Argon introductory pricing ends November 30  •  Input: $2 → $4 per million tokens  •  Output: $10 → $20",
+  "scenes": [
+    {
+      "type": "hook",
+      "kicker": "AI NEWS · GOOGLE",
+      "title": [
+        "GEMINI 4",
+        "ARGON"
+      ],
+      "lines": [
+        "THE PRICE",
+        "DOUBLES",
+        "DEC 1"
+      ],
+      "vo": [
+        "Google's most powerful AI is about to cost twice as much.",
+        "The launch discount ends November thirtieth."
+      ]
+    },
+    {
+      "type": "stat",
+      "value": 2,
+      "prefix": "$",
+      "unit": "PER 1M TOKENS",
+      "label": "INPUT PRICE · UNTIL NOV 30",
+      "vo": [
+        "Right now, input costs two dollars per million tokens.",
+        "Output, ten."
+      ]
+    },
+    {
+      "type": "cards",
+      "tag": "FROM DECEMBER 1",
+      "title": "NEW PRICES",
+      "cards": [
+        {
+          "title": "Input: $4 / 1M",
+          "sub": "was $2"
+        },
+        {
+          "title": "Output: $20 / 1M",
+          "sub": "was $10"
+        }
+      ],
+      "vo": [
+        "From December first,",
+        "input jumps to four dollars,",
+        "and output to twenty."
+      ]
+    },
+    {
+      "type": "outro",
+      "names": [
+        "Google",
+        "OpenAI",
+        "Meta"
+      ],
+      "headline": [
+        "THE AI PRICE WAR",
+        "IS ON!"
+      ],
+      "cta": "Would you pay double?",
+      "vo": [
+        "Google.",
+        "OpenAI.",
+        "Meta.",
+        "The AI price war is on!",
+        "Would you pay double? Tell me in the comments."
+      ]
+    }
+  ],
+  "youtube": {
+    "title": "Gemini 4 Argon price DOUBLES Dec 1 #Shorts",
+    "description": "Google's most powerful AI is about to cost twice as much: Gemini 4 Argon's launch pricing ends on November 30.\nInput goes from $2 to $4 per million tokens, output from $10 to $20.",
+    "tags": [
+      "Gemini 4 Argon",
+      "Google Gemini",
+      "AI pricing",
+      "Gemini API",
+      "AI news",
+      "Google AI"
+    ]
+  },
+  "sources": [
+    {
+      "title": "Forbes — Google's Gemini 4 Argon launch puts a deadline on its price advantage",
+      "url": "https://www.forbes.com/sites/gabrielalinzainescu/2026/10/14/googles-gemini-4-argon-launch-puts-a-deadline-on-its-price-advantage/"
+    },
+    {
+      "title": "Tech Insider — Gemini 4 Argon public launch: $2 vs $4 pricing cliff",
+      "url": "https://tech-insider.org/gemini-4-argon-public-launch-pricing-cliff-2026/"
+    },
+    {
+      "title": "TechCrunch — Google releases Gemini 4 Argon",
+      "url": "https://techcrunch.com/2026/09/30/google-releases-gemini-4-argon-called-its-most-powerful-model-yet/"
+    }
+  ],
+  "style": {
+    "hue": 116,
+    "harmony": "split",
+    "font": "syne",
+    "transition": "glitch",
+    "hud": "minimal",
+    "motion": "digital",
+    "camera": "calm",
+    "bpm": 116,
+    "progression": 3,
+    "key": 3
+  }
+}

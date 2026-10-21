@@ -3,16 +3,17 @@ import { AbsoluteFill, continueRender, delayRender, useCurrentFrame } from 'remo
 import type { RevealScene, TimedScene } from '../types';
 import { C, FPS, HEAD, S, W, clamp, cue, easeIn, easeInOut, mix, prog, rand, rgba } from '../lib';
 import { Canvas, glowSprite } from '../components/canvas';
-import { Tag, Title, mono, sora } from '../components/type';
+import { Tag, Title, fitText, headWeight, mono, sora } from '../components/type';
 
 /** Sample pixel positions of a word so particles can assemble into it. */
 function useWordPoints(word: string) {
   const [pts, setPts] = useState<{ x: number; y: number }[] | null>(null);
   const [handle] = useState(() => delayRender('sample word'));
   useEffect(() => {
-    const size = Math.min(250, 900 / Math.max(1, word.length * HEAD.em * 0.85));
-    const face = `${S.font === 'sora' ? 600 : 'normal'} ${size}px "${HEAD.family}"`;
-    document.fonts.load(face).then(() => {
+    const weight = headWeight(600);
+    document.fonts.load(`${weight} 100px "${HEAD.family}"`).then(() => {
+      const size = fitText(word, HEAD.family, weight, 250, 900);
+      const face = `${weight} ${size}px "${HEAD.family}"`;
       const c = document.createElement('canvas');
       c.width = W;
       c.height = 400;
@@ -113,8 +114,9 @@ export const Reveal: React.FC<{ s: TimedScene & RevealScene }> = ({ s }) => {
     return Array.from({ length: 70 }, () => ({ a: r() * Math.PI * 2, r1: 200 + r() * 200, r2: 420 + r() * 380, sp: 0.3 + r(), h: r() }));
   }, []);
 
-  const gather = prog(t, s.start, 1.15, easeInOut);
-  const disperse = prog(t, title - 0.55, 0.6, easeIn);
+  // The word assembles fast: the scene's voice starts about a second in.
+  const gather = prog(t, s.start, Math.min(1.15, Math.max(0.4, (title - s.start) * 0.55)), easeInOut);
+  const disperse = prog(t, title - 0.3, 0.45, easeIn);
   const yaw = Math.sin(t * 1.1) * 0.35;
   const chipAt = title - 0.35;
 

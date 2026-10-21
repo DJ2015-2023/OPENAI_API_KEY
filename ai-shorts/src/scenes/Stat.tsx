@@ -3,7 +3,7 @@ import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import type { StatScene, TimedScene } from '../types';
 import { C, FPS, HEAD, W, clamp, cue, easeIn, easeOut, mix, prog, rand, rgba } from '../lib';
 import { Canvas, glowSprite, project } from '../components/canvas';
-import { Title, mono, sora } from '../components/type';
+import { Title, fitText, headWeight, mono, sora } from '../components/type';
 
 const DEPTH = 6000;
 const TUNNEL_R = 900;
@@ -188,7 +188,7 @@ export const Stat: React.FC<{ s: TimedScene & StatScene }> = ({ s }) => {
         <div style={{ width: W, transform: `translateY(-40px) perspective(900px) rotateX(${Math.sin(lt * 0.9) * 6}deg) rotateY(${Math.sin(lt * 0.6) * 8}deg)` }}>
           <div
             style={{
-              textAlign: 'center', fontFamily: HEAD.family, fontWeight: 800, fontSize: Math.min(landed ? 168 : 150, 960 / Math.max(4, (count.length + 0.5) * HEAD.em * 0.95)), letterSpacing: '-0.03em', lineHeight: 1,
+              textAlign: 'center', fontFamily: HEAD.family, fontWeight: headWeight(800), whiteSpace: 'nowrap', fontSize: fitText(count, HEAD.family, headWeight(800), landed ? 168 : 150, 800), letterSpacing: '-0.03em', lineHeight: 1,
               transform: `scale(${landed ? 1 + surge * 0.2 : mix(0.6, 0.95, counterP)})`, opacity: clamp((lt - 0.1) * 4),
               backgroundImage: `linear-gradient(180deg, #ffffff 20%, ${C.cyan} 70%, ${C.blue})`, WebkitBackgroundClip: 'text', color: 'transparent',
               filter: `drop-shadow(0 0 30px ${C.cyan}cc) drop-shadow(0 0 90px ${C.blue}aa) ${landed ? '' : `blur(${(1 - counterP) * 6}px)`}`,

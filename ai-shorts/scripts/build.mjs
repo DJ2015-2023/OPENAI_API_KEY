@@ -78,10 +78,13 @@ function tts(text, out) {
 }
 
 // ---------- timeline ----------
-const LEAD = { hook: 2.0, reveal: 2.0, stat: 1.4 }; // seconds of visuals before the voice starts
+// Seconds of visuals before the voice starts. The hook speaks almost at once: viewers decide in
+// the first second whether to swipe away.
+const LEAD = { hook: 0.25, reveal: 1.2, stat: 1.0 };
 const GAP = 0.2; // pause between phrases
 const TAIL = 0.55; // after the last phrase of a scene
-const OUTRO_TAIL = 2.6; // CTA hold + final pulse + fade
+const OUTRO_TAIL = 1.7; // CTA hold + final pulse that loops back into the opening flash
+const FINAL_PULSE = 1.25; // seconds before the end
 
 function buildTimeline(ep, voDur, buildDir) {
   let t = 0;
@@ -102,7 +105,37 @@ function buildTimeline(ep, voDur, buildDir) {
     t = end;
   });
   const duration = Math.ceil(t * FPS) / FPS;
-  return { scenes, vo, duration };
+
+  // Word-by-word captions. Piper gives no word timings, so spread each phrase's
+  // duration over its words by length; the eye forgives a few frames.
+  const captions = [];
+  let group = 0;
+  ep.scenes.forEach((s, i) => {
+    s.vo.forEach((line, j) => {
+      // the outro's closing question is already on screen in large type
+      if (s.type === 'outro' && j === s.names.length + 1) return;
+      const at = scenes[i].cues[j];
+      const dur = voDur[i][j];
+      const words = line.replace(/\bA\.I\./g, 'AI').replace(/\bA\.P\.I\./g, 'API').split(/\s+/).filter(Boolean);
+      const weights = words.map((w) => w.replace(/[^\p{L}\p{N}]/gu, '').length + 2);
+      const total = weights.reduce((a, b) => a + b, 0);
+      let x = at;
+      let chunkLen = 0;
+      group++;
+      words.forEach((w, k) => {
+        const d = (dur * 0.94 * weights[k]) / total;
+        // at most 3 words / 16 letters on screen at once
+        if (chunkLen && (chunkLen + w.length > 16 || k % 3 === 0)) {
+          group++;
+          chunkLen = 0;
+        }
+        chunkLen += w.length + 1;
+        captions.push({ text: w, at: +x.toFixed(3), end: +(x + d).toFixed(3), group });
+        x += d;
+      });
+    });
+  });
+  return { scenes, vo, duration, captions };
 }
 
 function buildSfx(scenes, duration) {
@@ -116,10 +149,12 @@ function buildSfx(scenes, duration) {
       add('impact', s.start, { size: 0.7 });
     }
     if (s.type === 'hook') {
-      add('drone', 0, { len: c[0] + 0.05 });
-      add('riser', 0.4, { len: c[0] - 0.4 });
-      [0.6, 1.1, 1.5, 1.8].forEach((z) => z < c[0] && add('zap', z));
-      add('impact', c[0], { size: 1.0 });
+      if (c[0] > 1.2) {
+        add('drone', 0, { len: c[0] + 0.05 });
+        add('riser', 0.4, { len: c[0] - 0.4 });
+      }
+      add('impact', 0, { size: 1.0 }); // the video opens on a hit
+      [0.5, 0.9, 1.3].forEach((z) => add('zap', c[0] + z));
       c.slice(1).forEach((x) => { add('whoosh', x - 0.42, { len: 0.45 }); add('glitch', x); add('hit', x); });
     } else if (s.type === 'reveal') {
       add('shimmer', s.start + 0.1, { len: 2.0 });
@@ -154,10 +189,11 @@ function buildSfx(scenes, duration) {
       add('impact', head, { size: 1.0 });
       add('glitch', head);
       if (c[n + 1] !== undefined) { add('whoosh', c[n + 1] - 0.45, { len: 0.45 }); add('chime', c[n + 1]); add('blip', c[n + 1] + 0.25); }
-      const fin = s.end - 1.6;
+      const fin = s.end - FINAL_PULSE;
       add('riser', fin - 1.1, { len: 1.1 });
       add('impact', fin, { size: 1.2 });
       add('pulse', fin + 0.02);
+      add('whoosh', s.end - 0.5, { len: 0.5 }); // carries the loop back to the opening hit
     }
   });
   return fx.sort((a, b) => a.at - b.at);
@@ -191,7 +227,7 @@ ensurePiper();
 log('voiceover…');
 const voDur = ep.scenes.map((s, i) => s.vo.map((line, j) => tts(line, join(buildDir, 'vo', `s${i}_p${j}.wav`))));
 
-const { scenes, vo, duration } = buildTimeline(ep, voDur, buildDir);
+const { scenes, vo, duration, captions } = buildTimeline(ep, voDur, buildDir);
 const outro = scenes.at(-1);
 const breakdowns = scenes.filter((s) => s.type === 'reveal' || s.type === 'stat').map((s) => [s.start, s.cues[0]]);
 const audioRel = `episodes/${ep.id}.wav`;
@@ -204,13 +240,14 @@ const timeline = {
   duration,
   audio: audioRel,
   scenes,
+  captions,
   sfx: buildSfx(scenes, duration),
   vo,
-  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - 1.6, bpm: ep.style.bpm, progression: ep.style.progression, key: ep.style.key },
+  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - FINAL_PULSE, bpm: ep.style.bpm, progression: ep.style.progression, key: ep.style.key },
 };
 writeFileSync(join(buildDir, 'timeline.json'), JSON.stringify(timeline, null, 1));
 log(`timeline: ${duration.toFixed(1)} s, ${scenes.length} scenes, ${timeline.sfx.length} sound effects`);
-if (duration > 59) console.warn(`! ${duration.toFixed(1)} s is over YouTube's 60 s sweet spot for Shorts; trim the vo phrases.`);
+if (duration > 40) console.warn(`! ${duration.toFixed(1)} s: Shorts retain best at 25–35 s. Trim the vo phrases.`);
 
 log('soundtrack…');
 run('python3', [join(ROOT, 'scripts/make_audio.py'), join(buildDir, 'timeline.json'), join(buildDir, 'mix_raw.wav')], { stdio: 'inherit' });
