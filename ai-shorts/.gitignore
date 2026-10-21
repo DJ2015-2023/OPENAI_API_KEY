@@ -7,3 +7,4 @@ public/episodes
 published.local.jsonl
 secrets
 episodes/*/build.log
+episodes/zz-*
