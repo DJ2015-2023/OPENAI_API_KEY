@@ -26,6 +26,10 @@ export const Captions: React.FC<{ tl: Timeline }> = ({ tl }) => {
           position: 'absolute', top: TOP, left: 40, right: 40, display: 'flex', justifyContent: 'center', gap: '0 0.28em',
           fontFamily: HEAD.family, fontWeight: headWeight(800), fontSize: size, lineHeight: 1.15, textTransform: 'uppercase', whiteSpace: 'nowrap', flexWrap: 'nowrap',
           transform: `translateY(${(1 - pop) * 26}px) scale(${0.92 + 0.08 * pop})`, opacity: clamp(pop * 2),
+          // bright backdrops (synthwave sun, liquid blobs) need a backing plate to keep words legible
+          ...(THEME.world === 'synthwave' || THEME.world === 'liquid'
+            ? { background: 'rgba(0,0,0,0.42)', borderRadius: 20, padding: '10px 18px', left: 'auto', right: 'auto', width: 'fit-content', marginLeft: '50%', translate: '-50% 0' }
+            : {}),
         }}
       >
         {words.map((w, i) => {
