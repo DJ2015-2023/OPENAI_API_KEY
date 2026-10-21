@@ -309,6 +309,7 @@ const desc = [
   'Sources:',
   ...ep.sources.map((s) => `• ${s.title}: ${s.url}`),
   '',
+  ...(CONFIG.tiktokUrl ? [`More AI news on TikTok: ${CONFIG.tiktokUrl}`, ''] : []),
   'Voiceover and visuals are AI-generated.',
   `Style ID: ${styleId(ep.style, ep.scenes)}`,
   '#Shorts #AI #AINews #ArtificialIntelligence',
@@ -320,7 +321,7 @@ const hook = ep.youtube.description.split('\n')[0];
 const tagWords = (ep.youtube.tags ?? []).slice(0, 4).map((t) => '#' + t.replace(/[^\p{L}\p{N}]/gu, ''));
 const social = [
   'TIKTOK',
-  `${hook} ${outro.cta} 👇`,
+  `${hook} ${outro.cta} 👇 Full stories on YouTube: AI NEWS`,
   [...tagWords, '#AI', '#AINews', '#tech', '#fyp'].join(' '),
   '',
   'INSTAGRAM REELS',
