@@ -93,7 +93,10 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
    checked against `a` as well.
 
 6. **Render** both, one after the other: `node scripts/build.mjs episodes/<id>`
-   (about 25–30 min each; run it in the background). Output per episode:
+   (about 10–15 min each). Run it in the background with a command that **exits when the
+   render ends** (e.g. `node scripts/build.mjs episodes/<id> > build.log 2>&1`), so you're woken
+   when it finishes; don't wait with sleep loops. Send A's preview as soon as A is done if B
+   will take a while. Output per episode:
    `build/video.mp4`, `build/thumb.jpg`, `build/youtube.json`.
 
 7. **Ask for approval.** The full-quality file can exceed what the chat accepts, so send a
@@ -112,9 +115,9 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
    switch them to public in YouTube Studio. If they ask for changes, edit episode.json,
    rebuild, and ask again.
 
-9. **Save the record (best effort):** commit `episodes/<id>/episode.json` and
-   `published.jsonl` and try one `git push`. If the push is refused, leave it: the channel's
-   upload list already prevents repeats. Don't retry or bring it up with the owner.
+9. **Don't commit or push.** Scheduled sessions can't push to this repository, and an
+   unpushed commit makes the session nag itself instead of watching renders. The channel's
+   own upload list (step 2) is the record of what was published.
 
 ## Breaking-news mode
 
