@@ -1,6 +1,6 @@
 import React from 'react';
 import { continueRender, delayRender, staticFile, useCurrentFrame } from 'remotion';
-import { C, FPS, clamp, easeIn, mix, prog, rand } from '../lib';
+import { C, FPS, HEAD, S, clamp, easeIn, mix, prog, rand } from '../lib';
 
 // Fonts are bundled in public/fonts so rendering never depends on the network.
 export const sora = 'Sora';
@@ -8,6 +8,9 @@ export const mono = 'JetBrains Mono';
 const FONTS: [string, string, string][] = [
   [sora, '300', 'Sora-300.woff2'], [sora, '600', 'Sora-600.woff2'], [sora, '800', 'Sora-800.woff2'],
   [mono, '400', 'JetBrainsMono-400.woff2'], [mono, '700', 'JetBrainsMono-700.woff2'],
+  ['Space Grotesk', '700', 'SpaceGrotesk-700.woff2'], ['Unbounded', '800', 'Unbounded-800.woff2'], ['Syne', '800', 'Syne-800.woff2'],
+  ['Archivo Black', '400', 'ArchivoBlack-400.woff2'], ['Bebas Neue', '400', 'BebasNeue-400.woff2'], ['Oswald', '700', 'Oswald-700.woff2'],
+  ['Montserrat', '900', 'Montserrat-900.woff2'],
 ];
 if (typeof document !== 'undefined') {
   const handle = delayRender('fonts');
@@ -43,14 +46,37 @@ const GLYPHS = '01<>/{}[]#$%&*+=?ABCDEFGHJKLMNPQRSTUVWXYZ';
  * Kinetic headline. Letters arrive individually (blur → sharp, offset → home),
  * with an RGB-split on entry and a clean push-out on exit.
  */
+// Text is measured with the real font (loaded before the first frame), so any headline
+// length and any of the style's fonts fit on screen.
+let measureCtx: CanvasRenderingContext2D | null = null;
+/** Weight to request for the headline face: the extra fonts ship a single weight. */
+export const headWeight = (w: number | string) => (S.font === 'sora' ? w : 'normal');
+export function fitText(text: string, family: string, weight: number | string, wanted: number, maxW = 960, trackingEm = 0) {
+  if (typeof document === 'undefined') return wanted;
+  measureCtx ??= document.createElement('canvas').getContext('2d');
+  measureCtx!.font = `${weight} 100px "${family}"`;
+  const w = measureCtx!.measureText(text).width + trackingEm * 100 * [...text].length;
+  return Math.min(wanted, (maxW * 100) / Math.max(1, w));
+}
+
+// The episode style decides how headlines enter: hard slams, digital decoding, or soft rises.
+const MOTION: Record<string, Partial<Record<Variant, Variant>>> = {
+  impact: {},
+  digital: { slam: 'decode', rise: 'decode', wide: 'wide' },
+  elegant: { slam: 'rise', wide: 'rise' },
+};
+
 export const Title: React.FC<Props> = ({
-  text, at, out, size: wanted, weight = 800, variant = 'rise', gradient, glow = C.cyan, tracking = -0.02, stagger, style, font,
+  text, at, out, size: wanted, weight = 800, variant: asked = 'rise', gradient, glow = C.cyan, tracking = -0.02, stagger, style, font,
 }) => {
   const t = useCurrentFrame() / FPS;
   const chars = [...text];
+  const head = !font || font === sora; // headline face comes from the episode style
+  const variant = (head ? MOTION[S.motion]?.[asked] : undefined) ?? asked;
   // Auto-fit: headlines come from the news agent, so their length varies.
-  const em = (font === mono ? 0.62 : weight >= 700 ? 0.74 : 0.66) + tracking + (variant === 'wide' ? 0.05 : 0);
-  const size = Math.min(wanted, 980 / Math.max(1, chars.length * em));
+  const family = head ? HEAD.family : font!;
+  const fw = head ? headWeight(weight) : weight;
+  const size = fitText(text, family, fw, wanted, 950, tracking);
   const st = stagger ?? (variant === 'slam' ? 0.018 : variant === 'decode' ? 0.028 : 0.03);
   const exitP = out ? prog(t, out, 0.35, easeIn) : 0;
   if (t < at - 0.05 || exitP >= 1) return null;
@@ -117,7 +143,7 @@ export const Title: React.FC<Props> = ({
   return (
     <div
       style={{
-        position: 'relative', width: '100%', height: size * 1.25, fontFamily: font ?? sora, fontWeight: weight, fontSize: size,
+        position: 'relative', width: '100%', height: size * 1.25, fontFamily: family, fontWeight: fw, fontSize: size,
         letterSpacing: `${tracking + (1 - entryAll) * (variant === 'wide' ? 0.25 : 0.06)}em`, lineHeight: 1, perspective: 800,
         ...style,
       }}

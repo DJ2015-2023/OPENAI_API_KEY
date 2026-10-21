@@ -11,9 +11,24 @@ export type Scene = HookScene | RevealScene | ListScene | StatScene | CardsScene
 
 export type Palette = 'electric' | 'aurora' | 'ember' | 'royal';
 
+/** Visual + musical identity of one episode. Picked by scripts/style.mjs so no two videos match. */
+export type Style = {
+  hue: number; // base hue of the generated palette, 0–359
+  harmony: 'triad' | 'split' | 'analog' | 'complement';
+  font: 'sora' | 'space' | 'unbounded' | 'syne' | 'archivo' | 'bebas' | 'oswald' | 'montserrat';
+  transition: 'zoom' | 'whip' | 'iris' | 'glitch';
+  hud: 'ticker' | 'badge' | 'minimal';
+  motion: 'impact' | 'digital' | 'elegant'; // how headlines animate in
+  camera: 'calm' | 'energetic';
+  bpm: number;
+  progression: number; // index into the score's chord progressions
+  key: number; // semitone transposition
+};
+
 export type Episode = {
   id: string;
-  palette: Palette;
+  palette?: Palette;
+  style?: Style;
   ticker: string;
   scenes: Scene[];
   youtube: { title: string; description: string; tags: string[] };
@@ -25,13 +40,15 @@ export type Sfx = { type: string; at: number; len?: number; size?: number };
 
 export type Timeline = {
   id: string;
-  palette: Palette;
+  palette?: Palette;
+  style?: Style;
   ticker: string;
   fps: number;
   duration: number;
   audio: string; // path under public/
   scenes: TimedScene[];
+  captions?: { text: string; at: number; end: number; group: number }[];
   sfx: Sfx[];
   vo: { file: string; at: number }[];
-  music: { breakdowns: [number, number][]; beatStart: number; finalHit: number };
+  music: { breakdowns: [number, number][]; beatStart: number; finalHit: number; bpm?: number; progression?: number; key?: number };
 };

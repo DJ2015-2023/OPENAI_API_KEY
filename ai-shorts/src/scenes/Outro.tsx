@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import type { OutroScene, TimedScene } from '../types';
-import { C, FPS, W, clamp, cue, easeIn, easeOut, mix, prog, rand, rgba } from '../lib';
+import { C, FPS, HEAD, W, clamp, cue, easeIn, easeOut, mix, prog, rand, rgba } from '../lib';
 import { Canvas, glowSprite } from '../components/canvas';
-import { Title, mono, sora } from '../components/type';
+import { Title, fitText, headWeight, mono, sora } from '../components/type';
 
 const Beam: React.FC<{ x: number; at: number; color: string }> = ({ x, at, color }) => {
   const t = useCurrentFrame() / FPS;
@@ -48,7 +48,7 @@ export const Outro: React.FC<{ s: TimedScene & OutroScene }> = ({ s }) => {
   const NAMES = s.names.map((text, i) => ({ text: text.toUpperCase(), at: cue(s.cues, i, 0.5), color: nameColors[i % nameColors.length] }));
   const headAt = cue(s.cues, nn, 1.0);
   const ctaAt = cue(s.cues, nn + 1, 1.6);
-  const finalPulse = s.end - 1.6;
+  const finalPulse = s.end - 1.25;
   const heat = prog(t, headAt, 0.8);
   const back = prog(t, headAt - 0.1, 0.6);
   const cta = prog(t, ctaAt, 0.6);
@@ -130,20 +130,38 @@ export const Outro: React.FC<{ s: TimedScene & OutroScene }> = ({ s }) => {
 
       {/* Call to action */}
       {cta > 0 && (
-        <AbsoluteFill style={{ justifyContent: 'flex-start', alignItems: 'center', paddingTop: 1230 }}>
-          <div style={{ opacity: clamp(cta * 2) * (1 - prog(t, s.end - 1.5, 0.4, easeIn)), transform: `translateY(${(1 - cta) * 80}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26 }}>
+        <AbsoluteFill style={{ justifyContent: 'flex-start', alignItems: 'center', paddingTop: 1080 }}>
+          <div style={{ opacity: clamp(cta * 2), transform: `translateY(${(1 - cta) * 80}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 34, width: W }}>
+            {/* the question: comments are what push a Short to more viewers */}
             <div
               style={{
-                display: 'flex', alignItems: 'center', gap: 18, padding: '26px 54px', borderRadius: 999,
-                background: `linear-gradient(90deg, ${C.blue}, ${C.violet})`, boxShadow: `0 0 60px ${C.violet}aa, inset 0 1px 0 rgba(255,255,255,0.4)`,
-                transform: `scale(${1 - Math.exp(-Math.max(0, t - (ctaAt + 0.9)) * 10) * (t > ctaAt + 0.9 ? 0.08 : 0)})`,
-                fontFamily: sora, fontWeight: 800, fontSize: 54, color: '#fff', letterSpacing: '0.02em',
+                fontFamily: HEAD.family, fontWeight: headWeight(800), fontSize: fitText(s.cta.toUpperCase(), HEAD.family, headWeight(800), 70, 1700), color: '#fff', textAlign: 'center',
+                padding: '0 60px', lineHeight: 1.1, textShadow: `0 0 30px ${rgba(C.cyan, 0.6)}, 0 4px 0 rgba(0,0,0,0.5)`, clipPath: `inset(0 ${(1 - cta) * 100}% 0 0)`,
               }}
             >
-              <svg width="54" height="54" viewBox="0 0 24 24" fill="#fff"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z" /></svg>
-              FOLLOW
+              {s.cta.toUpperCase()}
             </div>
-            <div style={{ fontFamily: mono, fontWeight: 700, fontSize: 34, color: '#e6f3ff', letterSpacing: '0.24em', clipPath: `inset(0 ${(1 - cta) * 100}% 0 0)` }}>{s.cta.toUpperCase()}</div>
+            <div style={{ display: 'flex', gap: 22 }}>
+              {[
+                { label: 'COMMENT', color: C.blue, icon: <path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /> },
+                { label: 'FOLLOW', color: C.violet, icon: <path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z" /> },
+              ].map((b, i) => {
+                const tap = t > ctaAt + 0.9 + i * 0.35 ? Math.exp(-(t - (ctaAt + 0.9 + i * 0.35)) * 10) * 0.1 : 0;
+                return (
+                  <div
+                    key={b.label}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 14, padding: '20px 38px', borderRadius: 999, background: b.color,
+                      boxShadow: `0 0 50px ${rgba(b.color, 0.7)}, inset 0 1px 0 rgba(255,255,255,0.4)`, transform: `scale(${1 - tap})`,
+                      fontFamily: HEAD.family, fontWeight: headWeight(800), fontSize: 40, color: '#fff', letterSpacing: '0.03em', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="#fff">{b.icon}</svg>
+                    {b.label}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </AbsoluteFill>
       )}

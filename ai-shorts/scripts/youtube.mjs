@@ -6,6 +6,8 @@
 //   node scripts/youtube.mjs check                      verify credentials, print the channel name
 //   node scripts/youtube.mjs recent                     titles of the last 30 uploads (to avoid repeats)
 //   node scripts/youtube.mjs upload episodes/<id> --approved
+//   node scripts/youtube.mjs stats                      how the last 15 uploads performed (feeds the next picks)
+//   node scripts/youtube.mjs engage                     post each public Short's question as the first comment
 //
 // Upload refuses to run without --approved (the human said "publish") and
 // refuses to upload the same episode twice.
@@ -68,7 +70,12 @@ async function recent() {
   const ch = await channel(token);
   const pl = ch.contentDetails.relatedPlaylists.uploads;
   const j = await (await api(token, `playlistItems?part=snippet&maxResults=30&playlistId=${pl}`)).json();
-  for (const it of j.items ?? []) console.log(`${it.snippet.publishedAt.slice(0, 10)}  ${it.snippet.title}`);
+  const items = (j.items ?? []).map((it) => ({ publishedAt: it.snippet.publishedAt, title: it.snippet.title, description: it.snippet.description }));
+  if (process.argv.includes('--json')) return console.log(JSON.stringify(items));
+  for (const it of items) {
+    const style = /Style ID: (\S+)/.exec(it.description ?? '')?.[1];
+    console.log(`${it.publishedAt.slice(0, 10)}  ${it.title}${style ? `   [${style}]` : ''}`);
+  }
 }
 
 async function upload(dir) {
@@ -107,9 +114,69 @@ async function upload(dir) {
   console.log(`Uploaded (${out.privacy}): ${out.url}`);
 }
 
-const cmds = { check, recent, upload: () => upload(target) };
+async function uploads(token, n) {
+  const ch = await channel(token);
+  const pl = ch.contentDetails.relatedPlaylists.uploads;
+  const j = await (await api(token, `playlistItems?part=snippet,status&maxResults=${n}&playlistId=${pl}`)).json();
+  return { ch, items: j.items ?? [] };
+}
+
+async function stats() {
+  const token = await accessToken();
+  const { items } = await uploads(token, 15);
+  if (!items.length) return console.log('No uploads yet.');
+  const ids = items.map((it) => it.snippet.resourceId.videoId);
+  const v = await (await api(token, `videos?part=statistics,status,contentDetails&id=${ids.join(',')}`)).json();
+  const byId = Object.fromEntries((v.items ?? []).map((x) => [x.id, x]));
+  // Retention needs the YouTube Analytics API (yt-analytics.readonly scope); optional.
+  let retention = {};
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const r = await (await api(token, `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=2020-01-01&endDate=${today}&metrics=views,averageViewDuration,averageViewPercentage,subscribersGained&dimensions=video&filters=video==${ids.join(',')}&maxResults=50&sort=-views`)).json();
+    for (const row of r.rows ?? []) retention[row[0]] = { avgSec: row[2], avgPct: row[3], subs: row[4] };
+  } catch (e) {
+    console.log('(no retention data: enable YouTube Analytics API and the yt-analytics.readonly scope; see SETUP.md)');
+  }
+  console.log('date        status    views  likes  comm  avg%   subs  title');
+  for (const it of items) {
+    const id = it.snippet.resourceId.videoId;
+    const x = byId[id];
+    const st = x?.statistics ?? {};
+    const r = retention[id];
+    const pct = r ? `${Math.round(r.avgPct)}%` : '-';
+    console.log(
+      `${it.snippet.publishedAt.slice(0, 10)}  ${(x?.status?.privacyStatus ?? '?').padEnd(8)} ${String(st.viewCount ?? 0).padStart(6)} ${String(st.likeCount ?? 0).padStart(6)} ${String(st.commentCount ?? 0).padStart(5)}  ${pct.padStart(4)}  ${String(r?.subs ?? '-').padStart(5)}  ${it.snippet.title}`,
+    );
+  }
+}
+
+async function engage() {
+  const token = await accessToken();
+  const { ch, items } = await uploads(token, 15);
+  for (const it of items) {
+    const id = it.snippet.resourceId.videoId;
+    if (it.status?.privacyStatus !== 'public') continue; // private videos can't take comments
+    const q = /^Question: (.+)$/m.exec(it.snippet.description ?? '')?.[1];
+    if (!q) continue;
+    const threads = await (await api(token, `commentThreads?part=snippet&videoId=${id}&maxResults=50`)).json();
+    if ((threads.items ?? []).some((c) => c.snippet.topLevelComment.snippet.authorChannelId?.value === ch.id)) continue;
+    try {
+      await api(token, 'commentThreads?part=snippet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ snippet: { videoId: id, topLevelComment: { snippet: { textOriginal: q } } } }),
+      });
+      console.log(`commented on ${it.snippet.title}: ${q}`);
+    } catch (e) {
+      console.log(`could not comment on ${it.snippet.title} (needs the youtube.force-ssl scope; see SETUP.md): ${e.message.slice(0, 120)}`);
+      return;
+    }
+  }
+}
+
+const cmds = { check, recent, stats, engage, upload: () => upload(target) };
 if (!cmds[cmd]) {
-  console.error('usage: node scripts/youtube.mjs check | recent | upload episodes/<id> --approved');
+  console.error('usage: node scripts/youtube.mjs check | recent | stats | engage | upload episodes/<id> --approved');
   process.exit(1);
 }
 cmds[cmd]().catch((e) => {

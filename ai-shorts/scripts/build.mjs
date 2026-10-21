@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkLayout, pastStyles, pickStyle, styleId } from './style.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -19,6 +20,9 @@ const FPS = 30;
 const TTS_DIR = process.env.PIPER_DIR ?? join(ROOT, '.tts');
 const PIPER = join(TTS_DIR, 'piper/piper');
 const VOICE = join(TTS_DIR, 'en-us-ryan-high.onnx');
+const KOKORO_DIR = join(TTS_DIR, 'kokoro');
+// Channel settings shared by every episode (e.g. the narrator's voice).
+const CONFIG = existsSync(join(ROOT, 'config.json')) ? JSON.parse(readFileSync(join(ROOT, 'config.json'), 'utf8')) : {};
 
 const run = (cmd, argv, opts = {}) => execFileSync(cmd, argv, { stdio: ['pipe', 'pipe', 'inherit'], ...opts });
 const log = (...m) => console.log('›', ...m);
@@ -64,23 +68,65 @@ function ensurePiper() {
 
 const probeDuration = (f) => parseFloat(run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
 
-function tts(text, out) {
-  // Piper reads acronyms better spelled with dots ("A.I.").
-  const spoken = text.replace(/\bAI\b/g, 'A.I.').replace(/\bAPI\b/g, 'A.P.I.').replace(/\bGPU(s?)\b/g, 'G.P.U.$1');
-  run(PIPER, ['--model', VOICE, '--length_scale', '0.92', '--output_file', out], { input: spoken, stdio: ['pipe', 'ignore', 'ignore'] });
-  // Trim Piper's trailing silence so cues stay tight.
+/** Cut leading/trailing silence only; pauses inside a phrase are part of the delivery. */
+function trim(out) {
   const trimmed = out.replace(/\.wav$/, '.t.wav');
-  run('ffmpeg', ['-y', '-loglevel', 'error', '-i', out, '-af', 'silenceremove=stop_periods=-1:stop_duration=0.12:stop_threshold=-45dB', trimmed]);
+  const edge = 'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.03';
+  run('ffmpeg', ['-y', '-loglevel', 'error', '-i', out, '-af', `${edge},areverse,${edge},areverse`, trimmed]);
   copyFileSync(trimmed, out);
   rmSync(trimmed);
   return probeDuration(out);
 }
 
+/** Kokoro (natural neural voice) when its model is available, otherwise Piper. */
+function ensureKokoro() {
+  const model = join(KOKORO_DIR, 'kokoro-v1.0.onnx');
+  if (!existsSync(model)) {
+    log('downloading the Kokoro voice model (one time)…');
+    mkdirSync(KOKORO_DIR, { recursive: true });
+    const base = 'https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0';
+    try {
+      for (const f of ['kokoro-v1.0.onnx', 'voices-v1.0.bin']) run('curl', ['-sfL', '-o', join(KOKORO_DIR, f), `${base}/${f}`]);
+    } catch {
+      rmSync(KOKORO_DIR, { recursive: true, force: true });
+      return false;
+    }
+  }
+  try {
+    run('python3', ['-c', 'import kokoro_onnx, soundfile']);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function synthesize(jobs) {
+  if (CONFIG.tts !== 'piper' && ensureKokoro()) {
+    const voice = CONFIG.voice ?? 'am_michael';
+    log(`voiceover (Kokoro, ${voice})…`);
+    const file = join(buildDir, 'vo', 'jobs.json');
+    writeFileSync(file, JSON.stringify(jobs));
+    run('python3', [join(ROOT, 'scripts/tts_kokoro.py'), KOKORO_DIR, voice, file], { stdio: ['ignore', 'ignore', 'ignore'] });
+    return jobs.map((j) => trim(j.out));
+  }
+  ensurePiper();
+  log('voiceover (Piper fallback)…');
+  return jobs.map(({ text, out }) => {
+    // Piper reads acronyms better spelled with dots ("A.I.").
+    const spoken = text.replace(/\bAI\b/g, 'A.I.').replace(/\bAPI\b/g, 'A.P.I.').replace(/\bGPU(s?)\b/g, 'G.P.U.$1');
+    run(PIPER, ['--model', VOICE, '--length_scale', '0.92', '--output_file', out], { input: spoken, stdio: ['pipe', 'ignore', 'ignore'] });
+    return trim(out);
+  });
+}
+
 // ---------- timeline ----------
-const LEAD = { hook: 2.0, reveal: 2.0, stat: 1.4 }; // seconds of visuals before the voice starts
+// Seconds of visuals before the voice starts. The hook speaks almost at once: viewers decide in
+// the first second whether to swipe away.
+const LEAD = { hook: 0.25, reveal: 1.2, stat: 1.0 };
 const GAP = 0.2; // pause between phrases
 const TAIL = 0.55; // after the last phrase of a scene
-const OUTRO_TAIL = 2.6; // CTA hold + final pulse + fade
+const OUTRO_TAIL = 1.7; // CTA hold + final pulse that loops back into the opening flash
+const FINAL_PULSE = 1.25; // seconds before the end
 
 function buildTimeline(ep, voDur, buildDir) {
   let t = 0;
@@ -101,7 +147,37 @@ function buildTimeline(ep, voDur, buildDir) {
     t = end;
   });
   const duration = Math.ceil(t * FPS) / FPS;
-  return { scenes, vo, duration };
+
+  // Word-by-word captions. Piper gives no word timings, so spread each phrase's
+  // duration over its words by length; the eye forgives a few frames.
+  const captions = [];
+  let group = 0;
+  ep.scenes.forEach((s, i) => {
+    s.vo.forEach((line, j) => {
+      // the outro's closing question is already on screen in large type
+      if (s.type === 'outro' && j === s.names.length + 1) return;
+      const at = scenes[i].cues[j];
+      const dur = voDur[i][j];
+      const words = line.replace(/\bA\.I\./g, 'AI').replace(/\bA\.P\.I\./g, 'API').split(/\s+/).filter(Boolean);
+      const weights = words.map((w) => w.replace(/[^\p{L}\p{N}]/gu, '').length + 2);
+      const total = weights.reduce((a, b) => a + b, 0);
+      let x = at;
+      let chunkLen = 0;
+      group++;
+      words.forEach((w, k) => {
+        const d = (dur * 0.94 * weights[k]) / total;
+        // at most 3 words / 16 letters on screen at once
+        if (chunkLen && (chunkLen + w.length > 16 || k % 3 === 0)) {
+          group++;
+          chunkLen = 0;
+        }
+        chunkLen += w.length + 1;
+        captions.push({ text: w, at: +x.toFixed(3), end: +(x + d).toFixed(3), group });
+        x += d;
+      });
+    });
+  });
+  return { scenes, vo, duration, captions };
 }
 
 function buildSfx(scenes, duration) {
@@ -115,10 +191,12 @@ function buildSfx(scenes, duration) {
       add('impact', s.start, { size: 0.7 });
     }
     if (s.type === 'hook') {
-      add('drone', 0, { len: c[0] + 0.05 });
-      add('riser', 0.4, { len: c[0] - 0.4 });
-      [0.6, 1.1, 1.5, 1.8].forEach((z) => z < c[0] && add('zap', z));
-      add('impact', c[0], { size: 1.0 });
+      if (c[0] > 1.2) {
+        add('drone', 0, { len: c[0] + 0.05 });
+        add('riser', 0.4, { len: c[0] - 0.4 });
+      }
+      add('impact', 0, { size: 1.0 }); // the video opens on a hit
+      [0.5, 0.9, 1.3].forEach((z) => add('zap', c[0] + z));
       c.slice(1).forEach((x) => { add('whoosh', x - 0.42, { len: 0.45 }); add('glitch', x); add('hit', x); });
     } else if (s.type === 'reveal') {
       add('shimmer', s.start + 0.1, { len: 2.0 });
@@ -153,10 +231,11 @@ function buildSfx(scenes, duration) {
       add('impact', head, { size: 1.0 });
       add('glitch', head);
       if (c[n + 1] !== undefined) { add('whoosh', c[n + 1] - 0.45, { len: 0.45 }); add('chime', c[n + 1]); add('blip', c[n + 1] + 0.25); }
-      const fin = s.end - 1.6;
+      const fin = s.end - FINAL_PULSE;
       add('riser', fin - 1.1, { len: 1.1 });
       add('impact', fin, { size: 1.2 });
       add('pulse', fin + 0.02);
+      add('whoosh', s.end - 0.5, { len: 0.5 }); // carries the loop back to the opening hit
     }
   });
   return fx.sort((a, b) => a.at - b.at);
@@ -169,32 +248,49 @@ if (!existsSync(join(epDir, 'episode.json'))) {
 }
 const ep = JSON.parse(readFileSync(join(epDir, 'episode.json'), 'utf8'));
 validate(ep);
+
+// Every video gets its own look, sound and structure (see scripts/style.mjs).
+const past = pastStyles(ep.id);
+if (!ep.style) {
+  ep.style = pickStyle(past);
+  writeFileSync(join(epDir, 'episode.json'), JSON.stringify(ep, null, 2) + '\n');
+}
+try {
+  checkLayout(ep.scenes, past);
+} catch (e) {
+  console.error(e.message);
+  process.exit(1);
+}
+log(`style ${styleId(ep.style, ep.scenes)}`);
 const buildDir = join(epDir, 'build');
 mkdirSync(join(buildDir, 'vo'), { recursive: true });
 
-ensurePiper();
-log('voiceover…');
-const voDur = ep.scenes.map((s, i) => s.vo.map((line, j) => tts(line, join(buildDir, 'vo', `s${i}_p${j}.wav`))));
+const jobs = ep.scenes.flatMap((s, i) => s.vo.map((text, j) => ({ text, out: join(buildDir, 'vo', `s${i}_p${j}.wav`), i, j })));
+const durs = synthesize(jobs);
+const voDur = ep.scenes.map((s) => s.vo.map(() => 0));
+jobs.forEach((job, k) => (voDur[job.i][job.j] = durs[k]));
 
-const { scenes, vo, duration } = buildTimeline(ep, voDur, buildDir);
+const { scenes, vo, duration, captions } = buildTimeline(ep, voDur, buildDir);
 const outro = scenes.at(-1);
 const breakdowns = scenes.filter((s) => s.type === 'reveal' || s.type === 'stat').map((s) => [s.start, s.cues[0]]);
 const audioRel = `episodes/${ep.id}.wav`;
 const timeline = {
   id: ep.id,
   palette: ep.palette ?? 'electric',
+  style: ep.style,
   ticker: ep.ticker ?? ep.youtube.title,
   fps: FPS,
   duration,
   audio: audioRel,
   scenes,
+  captions,
   sfx: buildSfx(scenes, duration),
   vo,
-  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - 1.6 },
+  music: { beatStart: scenes[0].cues[0], breakdowns, finalHit: outro.end - FINAL_PULSE, bpm: ep.style.bpm, progression: ep.style.progression, key: ep.style.key },
 };
 writeFileSync(join(buildDir, 'timeline.json'), JSON.stringify(timeline, null, 1));
 log(`timeline: ${duration.toFixed(1)} s, ${scenes.length} scenes, ${timeline.sfx.length} sound effects`);
-if (duration > 59) console.warn(`! ${duration.toFixed(1)} s is over YouTube's 60 s sweet spot for Shorts; trim the vo phrases.`);
+if (duration > 40) console.warn(`! ${duration.toFixed(1)} s: Shorts retain best at 25–35 s. Trim the vo phrases.`);
 
 log('soundtrack…');
 run('python3', [join(ROOT, 'scripts/make_audio.py'), join(buildDir, 'timeline.json'), join(buildDir, 'mix_raw.wav')], { stdio: 'inherit' });
@@ -208,10 +304,13 @@ if (!existsSync(join(ROOT, 'src/sample-timeline.json'))) writeFileSync(join(ROOT
 const desc = [
   ep.youtube.description,
   '',
+  `Question: ${outro.cta} Tell us in the comments 👇`,
+  '',
   'Sources:',
   ...ep.sources.map((s) => `• ${s.title}: ${s.url}`),
   '',
   'Voiceover and visuals are AI-generated.',
+  `Style ID: ${styleId(ep.style, ep.scenes)}`,
   '#Shorts #AI #AINews #ArtificialIntelligence',
 ].join('\n');
 writeFileSync(join(buildDir, 'youtube.json'), JSON.stringify({ title: ep.youtube.title.slice(0, 100), description: desc, tags: ep.youtube.tags ?? [] }, null, 1));

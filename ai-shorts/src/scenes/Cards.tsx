@@ -2,9 +2,9 @@ import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import land from '../land.json';
 import type { CardsScene, TimedScene } from '../types';
-import { C, FPS, W, clamp, cue, easeOut, mix, prog, rgba } from '../lib';
+import { C, FPS, HEAD, W, clamp, cue, easeOut, mix, prog, rgba } from '../lib';
 import { Canvas, glowSprite } from '../components/canvas';
-import { Tag, Title, mono, sora } from '../components/type';
+import { Tag, Title, fitText, headWeight, mono, sora } from '../components/type';
 
 const CITIES: [number, number][] = [
   [-122.4, 37.8], [-74, 40.7], [-46.6, -23.5], [-0.1, 51.5], [2.35, 48.85], [13.4, 52.5], [31.2, 30.0], [28, -26.2],
@@ -57,7 +57,7 @@ const Card: React.FC<{ title: string; sub: string; at: number; icon: React.React
     >
       <div style={{ width: 84, height: 84, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${color}, ${C.violet})`, boxShadow: `0 0 30px ${color}88`, flexShrink: 0 }}>{icon}</div>
       <div>
-        <div style={{ fontFamily: sora, fontWeight: 800, fontSize: Math.min(50, 1260 / Math.max(1, title.length)), color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{title}</div>
+        <div style={{ fontFamily: HEAD.family, fontWeight: headWeight(800), whiteSpace: 'nowrap', fontSize: fitText(title, HEAD.family, headWeight(800), 50, 660), color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{title}</div>
         <div style={{ fontFamily: mono, fontSize: 22, color: '#a9d8ff', letterSpacing: '0.25em', marginTop: 8 }}>{sub}</div>
       </div>
     </div>
@@ -94,9 +94,9 @@ export const Cards: React.FC<{ s: TimedScene & CardsScene }> = ({ s }) => {
           ctx.fillRect(0, 0, 1080, 1920);
           // ocean body with a lit limb
           const body = ctx.createRadialGradient(GX - R * 0.35, GY - R * 0.4, R * 0.1, GX, GY, R);
-          body.addColorStop(0, '#173a8a');
-          body.addColorStop(0.7, '#08132f');
-          body.addColorStop(1, '#050a1c');
+          body.addColorStop(0, rgba(C.blue, 0.55));
+          body.addColorStop(0.7, rgba(C.bg, 0.95));
+          body.addColorStop(1, C.bg);
           ctx.fillStyle = body;
           ctx.beginPath();
           ctx.arc(GX, GY, R, 0, Math.PI * 2);
@@ -187,7 +187,7 @@ export const Cards: React.FC<{ s: TimedScene & CardsScene }> = ({ s }) => {
           <Title text={s.title} at={titleAt} size={110} variant="rise" />
         </div>
       </AbsoluteFill>
-      <AbsoluteFill style={{ paddingTop: n > 2 ? 1180 : 1300 }}>
+      <AbsoluteFill style={{ paddingTop: n > 2 ? 990 : 1090 }}>
         {s.cards.map((c, i) => (
           <Card
             key={i}

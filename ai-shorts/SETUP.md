@@ -60,3 +60,23 @@ Mientras tanto, cada Short se sube en privado y tú lo cambias a público en You
 con un clic. Para publicar directamente en público, solicita la auditoría (gratuita) en
 <https://support.google.com/youtube/contact/yt_api_form> y, cuando la aprueben, pon
 `YT_PRIVACY=public`.
+
+## Fase 2: analíticas y comentario automático (opcional, ~5 minutos)
+
+Con esto el agente aprende qué videos funcionan mejor y publica tu pregunta como primer
+comentario de cada Short público.
+
+1. En Google Cloud → **APIs y servicios → Biblioteca**, busca **YouTube Analytics API** y pulsa
+   **Habilitar**.
+2. Genera un refresh token nuevo en el OAuth Playground (como en el paso 4), pero con estos
+   cuatro permisos en **Input your own scopes**:
+   `https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.force-ssl`
+3. Reemplaza `YT_REFRESH_TOKEN` en las variables de entorno por el nuevo.
+
+YouTube no permite fijar comentarios desde la API: si quieres fijar la pregunta, hazlo desde
+YouTube Studio con un clic.
+
+## Voz del narrador
+
+La voz se elige en `ai-shorts/config.json` (`"voice"`). Opciones de Kokoro: `am_michael`,
+`am_fenrir`, `am_adam`, `bm_george` (británico), `af_heart`, `af_bella` (voces femeninas).
