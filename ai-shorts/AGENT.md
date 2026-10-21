@@ -22,9 +22,15 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 
 1. **Setup** (fresh container): `cd ai-shorts && bash scripts/setup.sh`
 
-2. **What's been covered:** run `node scripts/youtube.mjs recent` (titles and Style IDs of the
-   channel's last 30 uploads; this is the source of truth). Also glance at `published.jsonl` and
-   `episodes/` if they have anything.
+2. **What's been covered, and what worked:**
+   - `node scripts/youtube.mjs recent`: titles and Style IDs of the last 30 uploads (the source
+     of truth for repeats). Also glance at `published.jsonl` and `episodes/`.
+   - `node scripts/youtube.mjs engage`: posts each public Short's question as its first comment
+     (skips private ones and ones already commented).
+   - `node scripts/youtube.mjs stats`: views, likes, comments and average % watched per video.
+     Before picking today's stories, write 2–3 lines on what the best performers have in common
+     (topic, company, hook type, length) and lean toward it. Mention it to the owner in one
+     line when you send the previews.
 
 3. **Research.** Search the web (use `mode: "extended"`) for AI news from the last 24–48 h,
    newest first. List 5–8 candidates and score each 1–5 on:
@@ -56,6 +62,7 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
    - `vo`: one short phrase per on-screen element, in the order they appear. Each phrase is a
      cue: the element appears when its phrase starts, and every word is shown as a caption.
      Write numbers the way they should be spoken ("twenty twenty-seven", "one million").
+     Write acronyms plainly (AI, API, GPU), never with dots: the voice reads them correctly.
    - On-screen text: short and punchy (headline lines ≤ 16 characters work best).
    - **Outro:** `names` are the relevant competitors; `cta` is a short question to the viewer
      that invites an opinion ("Would you pay double?"). `outro.vo`: one phrase per name, then

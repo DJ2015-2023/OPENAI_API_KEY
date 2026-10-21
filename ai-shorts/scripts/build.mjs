@@ -20,6 +20,9 @@ const FPS = 30;
 const TTS_DIR = process.env.PIPER_DIR ?? join(ROOT, '.tts');
 const PIPER = join(TTS_DIR, 'piper/piper');
 const VOICE = join(TTS_DIR, 'en-us-ryan-high.onnx');
+const KOKORO_DIR = join(TTS_DIR, 'kokoro');
+// Channel settings shared by every episode (e.g. the narrator's voice).
+const CONFIG = existsSync(join(ROOT, 'config.json')) ? JSON.parse(readFileSync(join(ROOT, 'config.json'), 'utf8')) : {};
 
 const run = (cmd, argv, opts = {}) => execFileSync(cmd, argv, { stdio: ['pipe', 'pipe', 'inherit'], ...opts });
 const log = (...m) => console.log('›', ...m);
@@ -65,16 +68,55 @@ function ensurePiper() {
 
 const probeDuration = (f) => parseFloat(run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
 
-function tts(text, out) {
-  // Piper reads acronyms better spelled with dots ("A.I.").
-  const spoken = text.replace(/\bAI\b/g, 'A.I.').replace(/\bAPI\b/g, 'A.P.I.').replace(/\bGPU(s?)\b/g, 'G.P.U.$1');
-  run(PIPER, ['--model', VOICE, '--length_scale', '0.92', '--output_file', out], { input: spoken, stdio: ['pipe', 'ignore', 'ignore'] });
-  // Trim Piper's trailing silence so cues stay tight.
+/** Cut leading/trailing silence only; pauses inside a phrase are part of the delivery. */
+function trim(out) {
   const trimmed = out.replace(/\.wav$/, '.t.wav');
-  run('ffmpeg', ['-y', '-loglevel', 'error', '-i', out, '-af', 'silenceremove=stop_periods=-1:stop_duration=0.12:stop_threshold=-45dB', trimmed]);
+  const edge = 'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.03';
+  run('ffmpeg', ['-y', '-loglevel', 'error', '-i', out, '-af', `${edge},areverse,${edge},areverse`, trimmed]);
   copyFileSync(trimmed, out);
   rmSync(trimmed);
   return probeDuration(out);
+}
+
+/** Kokoro (natural neural voice) when its model is available, otherwise Piper. */
+function ensureKokoro() {
+  const model = join(KOKORO_DIR, 'kokoro-v1.0.onnx');
+  if (!existsSync(model)) {
+    log('downloading the Kokoro voice model (one time)…');
+    mkdirSync(KOKORO_DIR, { recursive: true });
+    const base = 'https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0';
+    try {
+      for (const f of ['kokoro-v1.0.onnx', 'voices-v1.0.bin']) run('curl', ['-sfL', '-o', join(KOKORO_DIR, f), `${base}/${f}`]);
+    } catch {
+      rmSync(KOKORO_DIR, { recursive: true, force: true });
+      return false;
+    }
+  }
+  try {
+    run('python3', ['-c', 'import kokoro_onnx, soundfile']);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function synthesize(jobs) {
+  if (CONFIG.tts !== 'piper' && ensureKokoro()) {
+    const voice = CONFIG.voice ?? 'am_michael';
+    log(`voiceover (Kokoro, ${voice})…`);
+    const file = join(buildDir, 'vo', 'jobs.json');
+    writeFileSync(file, JSON.stringify(jobs));
+    run('python3', [join(ROOT, 'scripts/tts_kokoro.py'), KOKORO_DIR, voice, file], { stdio: ['ignore', 'ignore', 'ignore'] });
+    return jobs.map((j) => trim(j.out));
+  }
+  ensurePiper();
+  log('voiceover (Piper fallback)…');
+  return jobs.map(({ text, out }) => {
+    // Piper reads acronyms better spelled with dots ("A.I.").
+    const spoken = text.replace(/\bAI\b/g, 'A.I.').replace(/\bAPI\b/g, 'A.P.I.').replace(/\bGPU(s?)\b/g, 'G.P.U.$1');
+    run(PIPER, ['--model', VOICE, '--length_scale', '0.92', '--output_file', out], { input: spoken, stdio: ['pipe', 'ignore', 'ignore'] });
+    return trim(out);
+  });
 }
 
 // ---------- timeline ----------
@@ -223,9 +265,10 @@ log(`style ${styleId(ep.style, ep.scenes)}`);
 const buildDir = join(epDir, 'build');
 mkdirSync(join(buildDir, 'vo'), { recursive: true });
 
-ensurePiper();
-log('voiceover…');
-const voDur = ep.scenes.map((s, i) => s.vo.map((line, j) => tts(line, join(buildDir, 'vo', `s${i}_p${j}.wav`))));
+const jobs = ep.scenes.flatMap((s, i) => s.vo.map((text, j) => ({ text, out: join(buildDir, 'vo', `s${i}_p${j}.wav`), i, j })));
+const durs = synthesize(jobs);
+const voDur = ep.scenes.map((s) => s.vo.map(() => 0));
+jobs.forEach((job, k) => (voDur[job.i][job.j] = durs[k]));
 
 const { scenes, vo, duration, captions } = buildTimeline(ep, voDur, buildDir);
 const outro = scenes.at(-1);
@@ -260,6 +303,8 @@ if (!existsSync(join(ROOT, 'src/sample-timeline.json'))) writeFileSync(join(ROOT
 // YouTube metadata: sources go in the description so viewers can check the news.
 const desc = [
   ep.youtube.description,
+  '',
+  `Question: ${outro.cta} Tell us in the comments 👇`,
   '',
   'Sources:',
   ...ep.sources.map((s) => `• ${s.title}: ${s.url}`),
