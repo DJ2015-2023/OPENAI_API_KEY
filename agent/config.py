@@ -65,6 +65,13 @@ def load_settings() -> Settings:
     if missing:
         raise SystemExit("Faltan variables de entorno: " + ", ".join(missing))
 
+    owner_chat_id = int(env.get("OWNER_CHAT_ID") or 0)
+    if owner_chat_id < 0:
+        raise SystemExit(
+            "OWNER_CHAT_ID empieza por '-': es el id de un canal o grupo, no el tuyo. "
+            "Déjalo vacío, arranca el agente y escribe al bot en privado: te dirá tu chat id personal."
+        )
+
     brand_path = env.get("BRAND_PATH", "brand.json")
     brand = json.loads(Path(brand_path).read_text(encoding="utf-8"))
 
@@ -73,7 +80,7 @@ def load_settings() -> Settings:
 
     return Settings(
         telegram_token=env["TELEGRAM_BOT_TOKEN"],
-        owner_chat_id=int(env.get("OWNER_CHAT_ID") or 0),
+        owner_chat_id=owner_chat_id,
         telegram_channel=env.get("TELEGRAM_CHANNEL", ""),
         vk_user_token=env.get("VK_USER_TOKEN", ""),
         vk_group_token=env.get("VK_GROUP_TOKEN", ""),

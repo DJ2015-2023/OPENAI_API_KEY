@@ -57,7 +57,7 @@ class App:
             if not msg or msg["chat"].get("type") != "private":
                 return
             chat_id = msg["chat"]["id"]
-            if not self.owner:
+            if not self.owner or (chat_id != self.owner and (msg.get("text") or "").strip() == "/id"):
                 self.tg.send_message(chat_id, f"Tu chat id es {chat_id}. Ponlo en OWNER_CHAT_ID y reinicia el agente.")
             elif chat_id == self.owner:
                 self.on_owner_message(msg)

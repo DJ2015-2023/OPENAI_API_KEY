@@ -281,3 +281,19 @@ def test_llm_sends_image_in_provider_format(provider):
     assert LLM(provider, "key", "model", session=s).complete("sys", "prompt", image=b"IMG") == "hola"
     body = json.dumps(s.calls[0][1]["json"])
     assert "SU1H" in body  # b"IMG" en base64
+
+
+def test_client_id_command_returns_chat_id_without_lead(tmp_path):
+    app = make_app(tmp_path)
+    app.handle_update(client_msg("/id"))
+    assert "Tu chat id es 222" in last_text(app)
+    assert app.store.recent_leads() == []
+
+
+def test_channel_id_as_owner_is_rejected(monkeypatch):
+    from agent.config import load_settings
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "t")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+    monkeypatch.setenv("OWNER_CHAT_ID", "-1001234567890")
+    with pytest.raises(SystemExit, match="canal o grupo"):
+        load_settings()
