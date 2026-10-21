@@ -315,6 +315,25 @@ const desc = [
 ].join('\n');
 writeFileSync(join(buildDir, 'youtube.json'), JSON.stringify({ title: ep.youtube.title.slice(0, 100), description: desc, tags: ep.youtube.tags ?? [] }, null, 1));
 
+// Ready-to-paste captions for posting the same video on TikTok and Instagram Reels.
+const hook = ep.youtube.description.split('\n')[0];
+const tagWords = (ep.youtube.tags ?? []).slice(0, 4).map((t) => '#' + t.replace(/[^\p{L}\p{N}]/gu, ''));
+const social = [
+  'TIKTOK',
+  `${hook} ${outro.cta} 👇`,
+  [...tagWords, '#AI', '#AINews', '#tech', '#fyp'].join(' '),
+  '',
+  'INSTAGRAM REELS',
+  `${hook}`,
+  '',
+  `${outro.cta} Tell us in the comments 👇`,
+  '',
+  `Sources: ${ep.sources.map((s) => s.url).join(' · ')}`,
+  '',
+  [...tagWords, '#AI', '#AINews', '#ArtificialIntelligence', '#TechNews', '#reels'].join(' '),
+].join('\n');
+writeFileSync(join(buildDir, 'social.txt'), social + '\n');
+
 const remotion = (cmd, extra) =>
   run('npx', ['remotion', cmd, 'src/index.ts', 'AiShort', ...extra, `--props=${join(buildDir, 'props.json')}`, '--log=error'], { cwd: ROOT, stdio: 'inherit' });
 

@@ -88,7 +88,9 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 7. **Ask for approval.** The full-quality file can exceed what the chat accepts, so send a
    preview: `ffmpeg -i build/video.mp4 -c:v libx264 -crf 24 -c:a copy build/preview.mp4`.
    Send both previews (SendUserFile), then in Spanish, for each: the story in two lines, the
-   title, the source links. Ask "¿Publico A, B, las dos o ninguna?". Then stop and wait.
+   title, the source links, and the contents of `build/social.txt` (ready-to-paste captions for
+   TikTok and Instagram Reels; the preview file is the one to post there). Ask "¿Publico A, B,
+   las dos o ninguna?". Then stop and wait.
    Before asking, run `node scripts/youtube.mjs check`; if the secrets are missing, say so and
    point the owner to `ai-shorts/SETUP.md` step 5.
 
@@ -101,3 +103,21 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 9. **Save the record (best effort):** commit `episodes/<id>/episode.json` and
    `published.jsonl` and try one `git push`. If the push is refused, leave it: the channel's
    upload list already prevents repeats. Don't retry or bring it up with the owner.
+
+## Breaking-news mode
+
+Some runs start with the words **BREAKING CHECK**. Those runs make **at most one** Short, and
+usually none:
+
+1. Setup and step 2 as usual (recent uploads, stats, engage).
+2. Search for AI news from the **last 6 hours** only. Score candidates as in step 3.
+3. Go ahead only if a story scores **17/20 or more**, is **under 6 hours old**, is confirmed by
+   two sources (one primary when one exists), and isn't covered by a recent upload or by an
+   episode already in `episodes/` from today. Typical examples: a major model launch from
+   OpenAI/Google/Anthropic/Meta/Apple, a huge acquisition or funding round, a landmark
+   regulation, a viral AI incident.
+4. If nothing qualifies: end the run with one short line in Spanish ("Sin noticias de última
+   hora que justifiquen un Short.") and **don't send any notification or file**.
+5. If something qualifies: make one episode `episodes/<YYYY-MM-DD>-x<hour>` (e.g.
+   `2026-10-21-x14`) exactly as in steps 4–8, with the hook kicker "BREAKING" and a title that
+   says it's new. Ask "¿Lo publico?" and wait.
