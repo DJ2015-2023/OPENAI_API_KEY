@@ -167,7 +167,7 @@ export const Icon: React.FC<{ name: string; at: number; size?: number; color?: s
 // ---------------- 1. Title: Latin Fusion · Halloween Party ----------------
 export const Title: React.FC<{ dur: number }> = ({ dur }) => {
   const t = useTime();
-  const shake = useShake([0, 0.5, 1.5, 2.0], 22);
+  const shake = useShake([0, BEAT, 3 * BEAT, 4 * BEAT], 22);
   const halo = 0.5 + 0.5 * Math.sin(t * 6);
   return (
     <Shell dur={dur} enter="iris" exit="fade">
@@ -183,7 +183,7 @@ export const Title: React.FC<{ dur: number }> = ({ dur }) => {
           />
           <Flip3D
             text="FUSION"
-            at={0.5}
+            at={BEAT}
             stagger={0.06}
             style={{ fontFamily: F.cinzel, fontWeight: 900, fontSize: 164, lineHeight: 1.05 }}
             letter={{ ...goldText, filter: "drop-shadow(0 0 30px rgba(255,140,40,0.55))" }}
@@ -191,28 +191,28 @@ export const Title: React.FC<{ dur: number }> = ({ dur }) => {
           <div style={{ height: 40 }} />
           <Slam
             text="HALLOWEEN"
-            at={1.5}
+            at={3 * BEAT}
             style={{ fontFamily: F.creep, fontSize: 168, lineHeight: 1, letterSpacing: "0.04em" }}
             textStyle={{ ...fireText, filter: `drop-shadow(0 0 ${20 + halo * 20}px rgba(255,90,20,0.8))` }}
           />
           <Slam
             text="Party"
-            at={2.0}
+            at={4 * BEAT}
             style={{ fontFamily: F.script, fontSize: 150, lineHeight: 0.9, marginTop: -6 }}
             textStyle={{ color: C.red, textShadow: `0 0 ${30 + halo * 25}px rgba(255,30,50,0.9)` }}
           />
           <Shimmer at={1.0} period={2.2} />
         </Col>
       </div>
-      <Burst at={1.5} cx={540} cy={1060} count={44} />
-      <Shockwave at={1.5} cy={1060} color={C.ember} />
+      <Burst at={3 * BEAT} cx={540} cy={1060} count={44} />
+      <Shockwave at={3 * BEAT} cy={1060} color={C.ember} />
     </Shell>
   );
 };
 
 // ---------------- 2. Passion ----------------
 export const Passion: React.FC<{ dur: number }> = ({ dur }) => {
-  const hits = [0.75, 1.5, 2.25, 3.0];
+  const hits = [BEAT, 2 * BEAT, 3 * BEAT, 5 * BEAT];
   const shake = useShake(hits, 26);
   const t = useTime();
   const flick = 0.85 + 0.15 * Math.sin(t * 31) * Math.sin(t * 13);
@@ -225,7 +225,7 @@ export const Passion: React.FC<{ dur: number }> = ({ dur }) => {
           </Rise>
           <Slam
             text="САМАЯ"
-            at={0.25}
+            at={0.15}
             style={{ fontFamily: F.oswald, fontWeight: 500, fontSize: 80, letterSpacing: "0.4em", paddingLeft: "0.4em", color: C.cream, marginTop: 10 }}
           />
           <Slam
@@ -293,7 +293,7 @@ const Time: React.FC<{ value: string; at: number }> = ({ value, at }) => (
 
 export const DateTime: React.FC<{ dur: number }> = ({ dur }) => {
   const t = useTime();
-  const clockAt = 2.0;
+  const clockAt = 4 * BEAT;
   const hand = interpolate(t, [clockAt, clockAt + 2.5], [0, 720], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <Shell dur={dur} enter="drop" exit="none">
@@ -386,12 +386,12 @@ export const Dress: React.FC<{ dur: number }> = ({ dur }) => (
       </Rise>
       <div style={{ height: 50 }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
-        <DressCard title="Dark Elegance" icon="rose" at={1.0} tilt={-6} />
-        <DressCard title="Total Black" icon="hat" at={1.5} tilt={5} />
-        <DressCard title="Spooky Chic" icon="mask" at={2.0} tilt={-4} />
+        <DressCard title="Dark Elegance" icon="rose" at={2 * BEAT} tilt={-6} />
+        <DressCard title="Total Black" icon="hat" at={3 * BEAT} tilt={5} />
+        <DressCard title="Spooky Chic" icon="mask" at={4 * BEAT} tilt={-4} />
       </div>
       <div style={{ height: 50 }} />
-      <Rise at={2.6}>
+      <Rise at={5 * BEAT}>
         <div style={{ fontFamily: F.oswald, fontWeight: 400, fontSize: 44, letterSpacing: "0.18em", color: C.muted }}>КОСТЮМЫ · МАСКИ · ГРИМ</div>
       </Rise>
     </Col>
@@ -476,11 +476,11 @@ export const Prices: React.FC<{ dur: number }> = ({ dur }) => (
       <div style={{ height: 46 }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
         {PRICES.map((p, i) => (
-          <Ticket key={p.date} {...p} at={1.0 + i * BEAT} i={i} />
+          <Ticket key={p.date} {...p} at={(2 + i) * BEAT} i={i} />
         ))}
       </div>
       <div style={{ height: 56 }} />
-      <Rise at={3.3}>
+      <Rise at={6 * BEAT}>
         <div
           style={{
             display: "flex",
@@ -497,7 +497,7 @@ export const Prices: React.FC<{ dur: number }> = ({ dur }) => (
             boxShadow: "0 0 40px rgba(240,192,96,0.35)",
           }}
         >
-          <Icon name="ticket" at={3.3} size={64} />
+          <Icon name="ticket" at={6 * BEAT} size={64} />
           latinfusion.ru
         </div>
       </Rise>
@@ -508,13 +508,13 @@ export const Prices: React.FC<{ dur: number }> = ({ dur }) => (
 // ---------------- 6. Location & contacts ----------------
 export const Location: React.FC<{ dur: number }> = ({ dur }) => {
   const t = useTime();
-  const drop = interpolate(t, [0.3, 0.9], [-700, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: backOut });
-  const rings = [0, 1, 2].map((i) => clamp01(((t - 0.9 - i * 0.35) % 1.4) / 1.4));
+  const drop = interpolate(t, [BEAT, 2 * BEAT], [-700, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: backOut });
+  const rings = [0, 1, 2].map((i) => clamp01(((t - 2 * BEAT - i * BEAT) % (3 * BEAT)) / (3 * BEAT)));
   return (
     <Shell dur={dur} enter="zoom" exit="none">
       <Col top={240} bottom={300}>
         <div style={{ position: "relative", width: 260, height: 260 }}>
-          {t > 0.9
+          {t > 2 * BEAT
             ? rings.map((r, i) => (
                 <div
                   key={i}
@@ -539,7 +539,7 @@ export const Location: React.FC<{ dur: number }> = ({ dur }) => {
           </div>
         </div>
         <div style={{ height: 30 }} />
-        <Flip3D text="TEMPLE BAR" at={0.9} stagger={0.045} style={{ fontFamily: F.sc, fontWeight: 900, fontSize: 132, lineHeight: 1 }} letter={goldText} />
+        <Flip3D text="TEMPLE BAR" at={2 * BEAT} stagger={0.045} style={{ fontFamily: F.sc, fontWeight: 900, fontSize: 132, lineHeight: 1 }} letter={goldText} />
         <Rise at={1.4}>
           <div style={{ fontFamily: F.oswald, fontWeight: 500, fontSize: 50, letterSpacing: "0.2em", color: C.red, marginTop: 20 }}>М. КУРСКАЯ</div>
         </Rise>
@@ -550,9 +550,9 @@ export const Location: React.FC<{ dur: number }> = ({ dur }) => {
         </Rise>
         <div style={{ height: 70 }} />
         {[
-          { icon: "globe", text: "latinfusion.ru", sub: "билеты", at: 2.2 },
-          { icon: "plane", text: "t.me/MSDE_BACHATA", sub: "видео и подробности", at: 2.6 },
-          { icon: "chat", text: "Direct / ЛС", sub: "бронирование", at: 3.0 },
+          { icon: "globe", text: "latinfusion.ru", sub: "билеты", at: 4 * BEAT },
+          { icon: "plane", text: "t.me/MSDE_BACHATA", sub: "видео и подробности", at: 5 * BEAT },
+          { icon: "chat", text: "Direct / ЛС", sub: "бронирование", at: 6 * BEAT },
         ].map((r) => (
           <Rise key={r.text} at={r.at} dist={40}>
             <div style={{ display: "flex", alignItems: "center", gap: 28, width: 800, padding: "14px 0" }}>

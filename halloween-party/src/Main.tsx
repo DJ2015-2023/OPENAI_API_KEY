@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, random, staticFile } from "remotion";
 import { AmbientBats, Background, Bat, Grain, Vignette, Webs, useTime } from "./fx";
 import { DateTime, Dress, Location, Passion, Poster, Prices, Title } from "./scenes";
-import { FPS, SCENES } from "./timeline";
+import { CUT, FPS, SCENES } from "./timeline";
 
 const COMPONENTS: Record<string, React.FC<{ dur: number }>> = {
   title: Title,
@@ -80,7 +80,7 @@ export const Main: React.FC = () => (
         </Sequence>
       );
     })}
-    <Sequence from={Math.round(4 * FPS)} durationInFrames={Math.round(28.5 * FPS)} name="webs">
+    <Sequence from={Math.round(4 * FPS)} durationInFrames={Math.round((CUT.poster - 4) * FPS)} name="webs">
       <Webs />
     </Sequence>
     <Grain />
@@ -88,13 +88,13 @@ export const Main: React.FC = () => (
     <Sequence from={0} durationInFrames={4 * FPS} name="intro (HyperFrames)">
       <OffthreadVideo src={staticFile("intro.mp4")} muted />
     </Sequence>
-    <Flash at={4} color="#ff5a3a" peak={0.8} />
-    <GlitchBars at={9} />
-    <Flash at={13} peak={0.6} />
-    <BatSwarm at={18} />
-    <Flash at={22.5} color="#ffb070" peak={0.4} />
-    <Flash at={28} peak={0.55} />
-    <Flash at={32.5} color="#ff7a40" peak={0.7} />
+    <Flash at={CUT.title} color="#ff5a3a" peak={0.8} />
+    <GlitchBars at={CUT.passion} />
+    <Flash at={CUT.date} peak={0.6} />
+    <BatSwarm at={CUT.dress} />
+    <Flash at={CUT.prices} color="#ffb070" peak={0.4} />
+    <Flash at={CUT.location} peak={0.55} />
+    <Flash at={CUT.poster} color="#ff7a40" peak={0.7} />
     <Audio src={staticFile("mix.wav")} />
   </AbsoluteFill>
 );

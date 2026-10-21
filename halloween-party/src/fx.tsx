@@ -24,8 +24,11 @@ export const F = {
   garamond: "'Cormorant Garamond', serif",
 };
 
-export const BPM = 120;
-export const BEAT = 60 / BPM;
+import { BEAT_SEC } from "./timeline";
+
+export const BEAT = BEAT_SEC;
+/** 0..1 phase within the current song beat (grid anchored on the drop at 4 s). */
+export const beatPhase = (t: number) => ((((t - 4) % BEAT) + BEAT) % BEAT) / BEAT;
 
 export const ease = Easing.bezier(0.16, 1, 0.3, 1);
 export const easeIn = Easing.bezier(0.7, 0, 0.84, 0);
@@ -174,7 +177,7 @@ export const Shimmer: React.FC<{ at: number; period?: number }> = ({ at, period 
 
 export const Background: React.FC = () => {
   const t = useTime();
-  const beat = Math.exp(-((t % BEAT) / BEAT) * 5); // decays every beat
+  const beat = t < 4 ? 0 : Math.exp(-beatPhase(t) * 5); // decays every beat
   const fx = 50 + Math.sin(t * 0.4) * 25;
   return (
     <AbsoluteFill style={{ background: C.bg }}>
@@ -274,7 +277,7 @@ export const Grain: React.FC = () => {
 
 export const Vignette: React.FC = () => {
   const t = useTime();
-  const beat = Math.exp(-((t % BEAT) / BEAT) * 6);
+  const beat = t < 4 ? 0 : Math.exp(-beatPhase(t) * 6);
   return (
     <AbsoluteFill
       style={{

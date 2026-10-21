@@ -1,13 +1,24 @@
-// Scene cuts sit on the 120 BPM beat grid (0.5 s per beat) so music hits land on transitions.
+import t from "./timeline.json";
+
+// Scene cuts are snapped to the song's beat grid by tools/analyze_song.py:
+// the drop lands on the title at 4.0 s and every later cut sits on a downbeat.
 export const FPS = 30;
-export const SCENES = [
-  { id: "intro", start: 0, dur: 4 },
-  { id: "title", start: 4, dur: 5 },
-  { id: "passion", start: 9, dur: 4 },
-  { id: "date", start: 13, dur: 5 },
-  { id: "dress", start: 18, dur: 4.5 },
-  { id: "prices", start: 22.5, dur: 5.5 },
-  { id: "location", start: 28, dur: 4.5 },
-  { id: "poster", start: 32.5, dur: 7.5 },
-] as const;
 export const TOTAL = 40;
+export const BEAT_SEC = t.beat;
+const c = t.cuts;
+const order = [
+  ["intro", 0],
+  ["title", c.title],
+  ["passion", c.passion],
+  ["date", c.date],
+  ["dress", c.dress],
+  ["prices", c.prices],
+  ["location", c.location],
+  ["poster", c.poster],
+] as const;
+export const SCENES = order.map(([id, start], i) => ({
+  id,
+  start,
+  dur: (i + 1 < order.length ? order[i + 1][1] : TOTAL) - start,
+}));
+export const CUT = c;
