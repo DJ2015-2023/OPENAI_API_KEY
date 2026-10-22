@@ -110,7 +110,7 @@ async function upload(dir) {
   const v = await res.json();
   const out = { videoId: v.id, url: `https://youtube.com/shorts/${v.id}`, privacy: v.status?.privacyStatus ?? privacy, uploadedAt: new Date().toISOString(), title: meta.title };
   writeFileSync(done, JSON.stringify(out, null, 1));
-  appendFileSync(join(ROOT, 'published.jsonl'), JSON.stringify({ id: JSON.parse(readFileSync(join(ep, 'episode.json'), 'utf8')).id, ...out }) + '\n');
+  appendFileSync(join(ROOT, 'published.local.jsonl'), JSON.stringify({ id: JSON.parse(readFileSync(join(ep, 'episode.json'), 'utf8')).id, ...out }) + '\n');
   console.log(`Uploaded (${out.privacy}): ${out.url}`);
 }
 

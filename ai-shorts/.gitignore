@@ -8,3 +8,7 @@ published.local.jsonl
 secrets
 episodes/*/build.log
 episodes/zz-*
+# Daily/breaking runs write these; scheduled sessions cannot push, so keep them out of git
+episodes/2*-a/
+episodes/2*-b/
+episodes/2*-x*/
