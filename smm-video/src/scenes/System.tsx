@@ -91,7 +91,7 @@ export const System: React.FC = () => {
 
       {/* dashboard */}
       <div style={{position: 'absolute', left: 60, right: 60, top: 680, transform: `translateY(${(1 - dash) * 1300}px)`}}>
-        <Glass style={{padding: '34px 40px'}}>
+        <Glass style={{padding: '34px 40px', background: 'linear-gradient(160deg, #46207F, #2A1160)', boxShadow: '0 20px 40px rgba(20,0,60,0.45)'}}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20}}>
             <Text size={38} weight={800}>📊 Результаты</Text>
             <div style={{fontFamily: FONT, fontWeight: 800, fontSize: 28, color: C.base, background: GRAD, padding: '8px 20px', borderRadius: 999}}>LIVE</div>
