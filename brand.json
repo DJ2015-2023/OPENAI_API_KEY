@@ -144,5 +144,18 @@
         "reply": "Стоимость зависит от задачи 🙂 Напишите, что вам нужно (бот, сайт, приложение, карточки или дизайн), и Дуглас назовёт точную цену. Для новых клиентов действует специальное предложение!"
       }
     ]
+  },
+  "carousel": {
+    "slides": 7,
+    "format": "1080×1350 px (vertical 4:5)",
+    "rules": [
+      "Usa el estilo claro que mejor funcionó en tu perfil: fondo blanco o azul claro, acentos azul eléctrico, ilustración 3D o robot",
+      "Un solo mensaje por diapositiva: titular grande (máximo 6–8 palabras) y como mucho 1 línea de apoyo",
+      "Máximo 15 palabras por diapositiva: tiene que leerse en el móvil sin hacer zoom",
+      "Portada con el dolor o la promesa del cliente, nunca una lista de servicios",
+      "Logo DR siempre en la misma esquina en todas las diapositivas",
+      "Muestra trabajos reales (capturas de bots, webs, tarjetas) en vez de solo texto",
+      "Última diapositiva: llamada a la acción con la palabra clave y @Douglas8707"
+    ]
   }
 }

@@ -4,29 +4,44 @@ Bot de Telegram que **escribe, te deja aprobar y publica** tus posts en tu **can
 
 ## Cómo funciona
 
+### 🎨 Carruseles: el agente dirige, tú diseñas
 ```
-Tú mandas una foto/video al bot (+ nota opcional, ej. "#bots бот для барбершопа")
+Cada mañana (o con /brief cards) el agente te manda el BRIEF del carrusel de mañana:
+  🎯 objetivo · 🪝 gancho · 1️⃣…7️⃣ diapositivas (texto en ruso para la imagen + qué mostrar)
+  ✍️ texto sugerido para el post
         ↓
-La IA mira la foto y escribe el texto en ruso (gancho + beneficios + «Напишите «БОТ»» + hashtags)
+Tú diseñas las imágenes (Canva, Figma, Photoshop…) siguiendo las instrucciones
         ↓
-Te llega el borrador con botones:  ✅ Publicar ahora · 🕒 Programar · ✏️ Editar · 🔄 Otra versión · ❌ Descartar
+Le mandas las imágenes JUNTAS como álbum:
+  – con tu texto en el pie → se publica tu texto tal cual
+  – sin texto → se usa el texto sugerido del brief
         ↓
-Se publica en el canal de Telegram + muro de VK, y te devuelve el texto para pegarlo en Instagram
+Borrador con botones:  ✅ Publicar ahora · 🕒 Programar · ✏️ Editar · ✨ Pulir · 🔄 Otra versión · ❌ Descartar
+        ↓
+Se publica el carrusel en el canal de Telegram + muro de VK, y te devuelve el texto para Instagram
 ```
+
+Las reglas de diseño de los carruseles (formato 1080×1350, estilo claro azul, máximo 15 palabras por diapositiva, logo, llamada a la acción…) están en `brand.json → carousel` y salen del análisis de lo que mejor funcionó en tu perfil. Un carrusel se une al brief pendiente más antiguo de los últimos 3 días; si quieres otro, pon su rúbrica en el pie (`#web`).
+
+### 📸 Post de una foto o video
+Mándale una foto o video (+ nota opcional, ej. `#bots бот для барбершопа`) y la IA escribe el texto.
 
 **Clientes:** cuando alguien escribe al bot de Telegram o a la comunidad de VK, el agente responde según la palabra clave, guarda el contacto y te avisa. **Si respondes (reply) a ese aviso, tu respuesta le llega al cliente.**
 
-**Calendario** (`brand.json → calendar`): lunes 19:00 bots · miércoles 19:00 tarjetas de producto · viernes 19:00 webs/apps · domingo 12:00 marca personal. «🕒 Programar» coloca el post en el próximo horario libre, y cada mañana a las 10:00 te recuerda qué toca hoy.
+**Calendario** (`brand.json → calendar`): lunes 19:00 bots · miércoles 19:00 tarjetas de producto · viernes 19:00 webs/apps · domingo 12:00 marca personal. «🕒 Programar» coloca el post en el próximo horario libre. Cada mañana a las 10:00 te recuerda qué toca hoy y te manda el brief de mañana.
 
 ### Comandos
 
 | Comando | Qué hace |
 |---|---|
-| foto / video | crea un borrador (rúbricas: `#bots` `#cards` `#web` `#personal`) |
+| `/brief [rúbrica]` | instrucciones de un carrusel (rúbricas: `bots` `cards` `web` `personal`) |
+| álbum de fotos | carrusel listo para publicar |
+| foto / video | post de una imagen; la IA escribe el texto |
 | `/idea [rúbrica]` | borrador solo de texto con una idea del calendario |
 | `/cola` | publicaciones programadas |
 | `/leads` | últimos clientes que escribieron |
 | ✏️ Editar → texto | reemplaza el texto; si empieza con `IA:` la IA lo reescribe (ej. `IA: más corto, añade oferta -50%`) |
+| ✨ Pulir | la IA mejora tu texto sin cambiar el sentido |
 
 ## Instalación paso a paso
 

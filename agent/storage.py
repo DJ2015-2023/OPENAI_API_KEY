@@ -9,10 +9,10 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TEXT NOT NULL,
     pillar TEXT,
     hint TEXT,
-    media_type TEXT,          -- 'photo', 'video' o NULL (solo texto)
-    media_file_id TEXT,       -- file_id de Telegram
+    media_type TEXT,          -- 'photo', 'video', 'album' o NULL (solo texto)
+    media_file_id TEXT,       -- file_id de Telegram; en 'album', JSON [{"type", "file_id"}, ...]
     caption TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending',  -- pending, approved, published, failed, rejected
+    status TEXT NOT NULL DEFAULT 'pending',  -- brief, pending, approved, published, failed, rejected
     scheduled_at TEXT,        -- ISO UTC
     published_at TEXT,
     result TEXT
@@ -79,6 +79,16 @@ class Store:
             "SELECT * FROM posts WHERE status = 'approved' AND scheduled_at <= ? ORDER BY scheduled_at",
             (iso(now),),
         )
+
+    def open_brief(self, since: datetime, pillar: str | None = None) -> dict | None:
+        """Brief pendiente más antiguo desde `since` (opcionalmente de una rúbrica)."""
+        sql = "SELECT * FROM posts WHERE status = 'brief' AND created_at >= ?"
+        params: tuple = (iso(since),)
+        if pillar:
+            sql += " AND pillar = ?"
+            params += (pillar,)
+        rows = self._all(sql + " ORDER BY id LIMIT 1", params)
+        return rows[0] if rows else None
 
     def scheduled_posts(self) -> list[dict]:
         return self._all("SELECT * FROM posts WHERE status = 'approved' ORDER BY scheduled_at")

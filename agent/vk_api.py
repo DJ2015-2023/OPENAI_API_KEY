@@ -49,13 +49,14 @@ class VKPublisher:
         return f"video{saved['owner_id']}_{saved['video_id']}"
 
     def post(self, text: str, media_type: str | None = None, content: bytes | None = None) -> str:
-        attachments = None
-        if content and media_type == "photo":
-            attachments = self.upload_photo(content)
-        elif content and media_type == "video":
-            attachments = self.upload_video(content, text.split("\n", 1)[0])
+        return self.post_album(text, [(media_type, content)] if content else [])
+
+    def post_album(self, text: str, items: list[tuple[str, bytes]]) -> str:
+        """Publica en el muro con 0..10 fotos/videos: items = [("photo", bytes), ...]."""
+        title = text.split("\n", 1)[0]
+        attachments = [self.upload_video(c, title) if t == "video" else self.upload_photo(c) for t, c in items[:10]]
         res = self.api.call("wall.post", owner_id=-self.group_id, from_group=1,
-                            message=text, attachments=attachments)
+                            message=text, attachments=",".join(attachments) or None)
         return f"https://vk.com/wall-{self.group_id}_{res['post_id']}"
 
 

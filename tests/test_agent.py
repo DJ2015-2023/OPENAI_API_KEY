@@ -25,7 +25,8 @@ class FakeTG:
     def __init__(self):
         self.sent = []      # (chat_id, text, reply_markup)
         self.media = []     # (chat_id, media_type, file_id, caption)
-        self.posts = []     # (chat_id, text, media_type, file_id)
+        self.posts = []     # (chat_id, text, items)
+        self.groups = []    # (chat_id, items)
         self.next_id = 1000
 
     def send_message(self, chat_id, text, reply_markup=None):
@@ -36,14 +37,17 @@ class FakeTG:
     def send_media(self, chat_id, media_type, file_id, caption=None, reply_markup=None):
         self.media.append((chat_id, media_type, file_id, caption))
 
-    def post(self, chat_id, text, media_type=None, file_id=None):
-        self.posts.append((chat_id, text, media_type, file_id))
+    def send_media_group(self, chat_id, items, caption=None):
+        self.groups.append((chat_id, items))
+
+    def post(self, chat_id, text, media_type=None, file_id=None, items=None):
+        self.posts.append((chat_id, text, items))
 
     def answer_callback(self, callback_id, text=""):
         pass
 
     def download(self, file_id):
-        return b"IMG"
+        return b"IMG-" + file_id.encode()
 
 
 class FakeLLM:
@@ -54,6 +58,9 @@ class FakeLLM:
 
     def complete(self, system, prompt, image=None, **kw):
         self.calls.append((system, prompt, image))
+        if "BRIEF" in prompt:
+            return "🎯 Objetivo: atraer clientes\n1️⃣ PORTADA\nTexto: «Ваша карточка теряет продажи?»\n" \
+                   "=== ТЕКСТ ПОСТА ===\nТекст из брифа #карточкитоваров"
         return f"Пост номер {len(self.calls)}\n\nНапишите «БОТ» в личные сообщения\n#чатбот"
 
 
@@ -61,8 +68,8 @@ class FakeVKPublisher:
     def __init__(self):
         self.posts = []
 
-    def post(self, text, media_type=None, content=None):
-        self.posts.append((text, media_type, content))
+    def post_album(self, text, items):
+        self.posts.append((text, items))
         return "https://vk.com/wall-1_1"
 
 
@@ -117,7 +124,7 @@ def test_photo_creates_draft_with_pillar_from_hashtag(tmp_path):
     assert post["hint"] == "карточка для крема"
     assert post["media_file_id"] == "big"
     system, prompt, image = app.llm.calls[0]
-    assert "DR Веб-Дизайн" in system and "КАРТОЧКА" in prompt and image == b"IMG"
+    assert "DR Веб-Дизайн" in system and "КАРТОЧКА" in prompt and image == b"IMG-big"
     assert app.tg.media[-1][2] == "big"
     assert "Borrador #1" in last_text(app)
     assert app.tg.sent[-1][2]["inline_keyboard"][0][0]["callback_data"] == "pub:1"
@@ -127,8 +134,8 @@ def test_publish_now_posts_to_telegram_and_vk(tmp_path):
     app = make_app(tmp_path)
     app.handle_update(owner_msg(photo=[{"file_id": "f1"}], caption=""))
     app.handle_update(callback("pub:1"))
-    assert app.tg.posts == [("@canal", app.store.get_post(1)["caption"], "photo", "f1")]
-    assert app.vk_publisher.posts[0][1:] == ("photo", b"IMG")
+    assert app.tg.posts == [("@canal", app.store.get_post(1)["caption"], [{"type": "photo", "file_id": "f1"}])]
+    assert app.vk_publisher.posts[0][1] == [("photo", b"IMG-f1")]
     assert app.store.get_post(1)["status"] == "published"
     assert "Texto para Instagram" in last_text(app)
 
@@ -184,7 +191,7 @@ def test_daily_reminder_sent_once(tmp_path):
     app.tick()
     app.tick()
     reminders = [t for _, t, _ in app.tg.sent if t.startswith("📅")]
-    assert len(reminders) == 1 and "Чат-боты" in reminders[0]
+    assert len(reminders) == 1 and "Чат-боты" in reminders[0]  # el martes no hay horario: no hay brief
 
 
 # ---------------------------------------------------------------- clientes
@@ -333,3 +340,140 @@ def test_yandex_settings_require_folder(monkeypatch):
     monkeypatch.delenv("YANDEX_FOLDER_ID", raising=False)
     with pytest.raises(SystemExit, match="YANDEX_FOLDER_ID"):
         load_settings()
+
+
+
+# ---------------------------------------------------------------- carruseles
+def album(gid, file_ids, caption=None):
+    msgs = []
+    for n, fid in enumerate(file_ids):
+        extra = {"media_group_id": gid, "photo": [{"file_id": fid}]}
+        if caption and n == 0:
+            extra["caption"] = caption
+        msgs.append(owner_msg(**extra))
+    return msgs
+
+
+def send_album(app, gid, file_ids, caption=None):
+    for upd in album(gid, file_ids, caption):
+        app.handle_update(upd)
+    app.flush_albums(force=True)
+
+
+def test_brief_command_sends_slide_instructions_and_suggested_caption(tmp_path):
+    app = make_app(tmp_path)
+    app.handle_update(owner_msg(text="/brief cards"))
+    post = app.store.get_post(1)
+    assert post["status"] == "brief" and post["pillar"] == "cards"
+    assert post["caption"] == "Текст из брифа #карточкитоваров"
+    texts = [t for _, t, _ in app.tg.sent]
+    assert any("Brief #1" in t and "PORTADA" in t and "=== ТЕКСТ" not in t for t in texts)
+    assert any("Текст из брифа" in t for t in texts)
+    system, prompt, _ = app.llm.calls[0]
+    assert "1080×1350" in prompt and "КАРТОЧКА" in prompt and "español" in system
+
+
+def test_album_without_text_uses_brief_caption(tmp_path):
+    app = make_app(tmp_path)
+    app.handle_update(owner_msg(text="/brief cards"))
+    send_album(app, "g1", ["s1", "s2", "s3"])
+    post = app.store.get_post(1)
+    assert post["status"] == "pending" and post["media_type"] == "album"
+    assert post["caption"] == "Текст из брифа #карточкитоваров"
+    assert app.tg.groups[-1] == (OWNER, [{"type": "photo", "file_id": f} for f in ("s1", "s2", "s3")])
+    assert len(app.llm.calls) == 1  # solo el brief: no se reescribe nada
+
+
+def test_album_with_own_text_is_published_verbatim(tmp_path):
+    app = make_app(tmp_path)
+    send_album(app, "g1", ["s1", "s2"], caption="#web Мой текст про сайты")
+    post = app.store.get_post(1)
+    assert post["caption"] == "Мой текст про сайты" and post["pillar"] == "web"
+    assert app.llm.calls == []
+    app.handle_update(callback("pub:1"))
+    assert app.tg.posts[0][1] == "Мой текст про сайты"
+    assert app.vk_publisher.posts[0][1] == [("photo", b"IMG-s1"), ("photo", b"IMG-s2")]
+
+
+def test_album_waits_for_all_photos(tmp_path):
+    app = make_app(tmp_path)
+    clock = {"t": 100.0}
+    app.monotonic = lambda: clock["t"]
+    for upd in album("g1", ["s1", "s2"], caption="текст"):
+        app.handle_update(upd)
+    app.flush_albums()
+    assert app.store.get_post(1) is None
+    clock["t"] += 5
+    app.flush_albums()
+    assert len(json.loads(app.store.get_post(1)["media_file_id"])) == 2
+
+
+def test_carousel_joins_oldest_open_brief(tmp_path):
+    app = make_app(tmp_path)
+    app.handle_update(owner_msg(text="/brief cards"))
+    app.handle_update(owner_msg(text="/brief web"))
+    send_album(app, "g1", ["s1"])
+    assert app.store.get_post(1)["status"] == "pending"
+    assert app.store.get_post(2)["status"] == "brief"
+    send_album(app, "g2", ["s2"], caption="#web")
+    assert app.store.get_post(2)["status"] == "pending"
+
+
+def test_polish_rewrites_owner_text(tmp_path):
+    app = make_app(tmp_path)
+    send_album(app, "g1", ["s1"], caption="мой текст")
+    app.handle_update(callback("polish:1"))
+    assert "мой текст" in app.llm.calls[-1][1]
+    assert app.store.get_post(1)["caption"].startswith("Пост номер")
+
+
+def test_brief_buttons_cannot_publish_before_carousel(tmp_path):
+    app = make_app(tmp_path)
+    app.handle_update(owner_msg(text="/brief cards"))
+    app.handle_update(callback("pub:1"))
+    assert app.tg.posts == [] and app.store.get_post(1)["status"] == "brief"
+
+
+def test_reminder_sends_tomorrows_brief(tmp_path):
+    tuesday = datetime(2026, 10, 20, 8, 0, tzinfo=timezone.utc)  # mañana miércoles: tarjetas
+    app = make_app(tmp_path, clock=lambda: tuesday)
+    app.tick()
+    texts = [t for _, t, _ in app.tg.sent]
+    assert any(t.startswith("📅 Mañana a las 19:00") and "Brief #1" in t for t in texts)
+    assert app.store.get_post(1)["pillar"] == "cards"
+
+
+def test_telegram_album_caption_and_split():
+    s = FakeSession([FakeResponse({"ok": True, "result": []})] * 3)
+    api = TelegramAPI("T", session=s)
+    items = [{"type": "photo", "file_id": "a"}, {"type": "photo", "file_id": "b"}]
+    api.post("@c", "corto", items=items)
+    media = json.loads(s.calls[0][1]["data"]["media"])
+    assert media[0] == {"type": "photo", "media": "a", "caption": "corto"} and "caption" not in media[1]
+    api.post("@c", "x" * 1500, items=items)
+    assert s.calls[1][0].endswith("/sendMediaGroup") and s.calls[2][0].endswith("/sendMessage")
+
+
+def test_vk_album_attaches_all_photos():
+    s = FakeSession([
+        FakeResponse({"response": {"upload_url": "https://up"}}),
+        FakeResponse({"server": 1, "photo": "p", "hash": "h"}),
+        FakeResponse({"response": [{"owner_id": -5, "id": 1}]}),
+        FakeResponse({"response": {"upload_url": "https://up"}}),
+        FakeResponse({"server": 1, "photo": "p", "hash": "h"}),
+        FakeResponse({"response": [{"owner_id": -5, "id": 2}]}),
+        FakeResponse({"response": {"post_id": 8}}),
+    ])
+    VKPublisher(VKAPI("tok", session=s), 5).post_album("t", [("photo", b"a"), ("photo", b"b")])
+    assert s.calls[-1][1]["data"]["attachments"] == "photo-5_1,photo-5_2"
+
+
+def test_long_message_is_split_with_buttons_on_last_chunk():
+    from agent.telegram_api import split_text
+    text = "\n".join("línea %03d " % n + "x" * 90 for n in range(100))
+    chunks = split_text(text, 4096)
+    assert "".join(chunks) == text and all(len(c) <= 4096 for c in chunks) and len(chunks) == 3
+    s = FakeSession([FakeResponse({"ok": True, "result": {}})] * 3)
+    TelegramAPI("T", session=s).send_message(1, text, reply_markup={"k": 1})
+    assert ["reply_markup" in c[1]["data"] for c in s.calls] == [False, False, True]
+    assert split_text("", 10) == [""]

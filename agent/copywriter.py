@@ -2,6 +2,7 @@
 from .llm import LLM
 
 MAX_CHARS = 900
+CAPTION_MARKER = "=== ТЕКСТ ПОСТА ==="
 
 
 def system_prompt(brand: dict) -> str:
@@ -49,3 +50,51 @@ def rewrite_post(llm: LLM, brand: dict, caption: str, instruction: str) -> str:
               f"Перепиши его по инструкции автора (автор пишет по-испански или по-русски): {instruction}\n"
               "Сохрани призыв и хэштеги, соблюдай все правила.")
     return llm.complete(system_prompt(brand), prompt)
+
+
+def brief_system(brand: dict) -> str:
+    return (f"Eres el director creativo y SMM de «{brand['name']}» ({brand['owner']}, {brand['city']}). "
+            f"Público: {brand['audience']}. Tono de los textos: {brand['tone']}. "
+            "Escribes instrucciones claras para que el dueño diseñe él mismo un carrusel que atraiga clientes. "
+            "Las instrucciones van en español; los textos que aparecen en las imágenes y el texto del post, en ruso. "
+            "Sin Markdown ni asteriscos. No inventes cifras, precios ni clientes: si hace falta un dato real, "
+            "pide al dueño que lo ponga entre [corchetes].")
+
+
+def write_brief(llm: LLM, brand: dict, pillar: str, idea: str) -> tuple[str, str]:
+    """Devuelve (instrucciones del carrusel, texto del post sugerido)."""
+    p = brand["pillars"][pillar]
+    c = brand["carousel"]
+    rules = "\n".join(f"- {r}" for r in c["rules"])
+    prompt = f"""Prepara el BRIEF de un carrusel para Telegram, VK e Instagram.
+
+Rúbrica: {p['name']} — {p['description']}
+Tema: {idea}
+Palabra clave de la llamada a la acción: «{p['cta_keyword']}»
+Formato: {c['format']}, {c['slides']} diapositivas.
+
+Reglas de diseño:
+{rules}
+
+Responde exactamente con este formato:
+🎯 Objetivo: (1 línea)
+🪝 Gancho: (por qué alguien dejaría de deslizar, 1 línea)
+
+1️⃣ PORTADA
+Texto: «texto en ruso para la imagen»
+Visual: qué mostrar en la imagen
+
+(sigue igual hasta la diapositiva {c['slides']}; la última es la llamada a la acción con «{p['cta_keyword']}»)
+
+Después escribe sola esta línea:
+{CAPTION_MARKER}
+y debajo el texto del post en ruso: gancho, valor, призыв написать «{p['cta_keyword']}» в личные сообщения y 5–8 хэштегов de {' '.join(brand['hashtags'])}. Máximo {MAX_CHARS} caracteres.
+Todo el brief debe ocupar menos de 3000 caracteres."""
+    text = llm.complete(brief_system(brand), prompt, max_tokens=2000)
+    brief, _, caption = text.partition(CAPTION_MARKER)
+    return brief.strip(), caption.strip()
+
+
+def polish_post(llm: LLM, brand: dict, caption: str) -> str:
+    return rewrite_post(llm, brand, caption,
+                        "mejora la redacción y el gancho sin cambiar el sentido, los datos ni el estilo del autor")
