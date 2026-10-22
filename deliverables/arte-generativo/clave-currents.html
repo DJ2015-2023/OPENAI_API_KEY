@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<!--
+    THIS IS A TEMPLATE THAT SHOULD BE USED EVERY TIME AND MODIFIED.
+    WHAT TO KEEP:
+    ✓ Overall structure (header, sidebar, main content)
+    ✓ Anthropic branding (colors, fonts, layout)
+    ✓ Seed navigation section (always include this)
+    ✓ Self-contained artifact (everything inline)
+
+    WHAT TO CREATIVELY EDIT:
+    ✗ The p5.js algorithm (implement YOUR vision)
+    ✗ The parameters (define what YOUR art needs)
+    ✗ The UI controls (match YOUR parameters)
+
+    Let your philosophy guide the implementation.
+    The world is your oyster - be creative!
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clave Currents</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Anthropic Brand Colors */
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar h1 {
+            font-family: 'Lora', serif;
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--anthropic-dark);
+            margin-bottom: 8px;
+        }
+
+        .sidebar .subtitle {
+            color: var(--anthropic-mid-gray);
+            font-size: 14px;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        /* Control Sections */
+        .control-section {
+            margin-bottom: 32px;
+        }
+
+        .control-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--anthropic-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-section h3::before {
+            content: '•';
+            color: var(--anthropic-orange);
+            font-weight: bold;
+        }
+
+        /* Seed Controls */
+        .seed-input {
+            width: 100%;
+            background: var(--anthropic-light);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--anthropic-light-gray);
+            text-align: center;
+        }
+
+        .seed-input:focus {
+            outline: none;
+            border-color: var(--anthropic-orange);
+            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1);
+            background: white;
+        }
+
+        .seed-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .regen-button {
+            margin-bottom: 0;
+        }
+
+        /* Parameter Controls */
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--anthropic-dark);
+            margin-bottom: 8px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 4px;
+            background: var(--anthropic-light-gray);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--anthropic-orange);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: #c86641;
+        }
+
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--anthropic-orange);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .value-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* Color Pickers */
+        .color-group {
+            margin-bottom: 16px;
+        }
+
+        .color-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            margin-bottom: 4px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-picker-container input[type="color"] {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        .color-value {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+        }
+
+        /* Buttons */
+        .button {
+            background: var(--anthropic-orange);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .button:hover {
+            background: #c86641;
+            transform: translateY(-1px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.secondary {
+            background: var(--anthropic-blue);
+        }
+
+        .button.secondary:hover {
+            background: #5a8bb8;
+        }
+
+        .button.tertiary {
+            background: var(--anthropic-green);
+        }
+
+        .button.tertiary:hover {
+            background: #6b7b52;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .button-row .button {
+            flex: 1;
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        #canvas-container {
+            width: 100%;
+            max-width: 1000px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(20, 20, 19, 0.1);
+            background: white;
+        }
+
+        #canvas-container canvas {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--anthropic-mid-gray);
+        }
+
+        /* Responsive - Stack on mobile */
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .canvas-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Control Sidebar -->
+        <div class="sidebar">
+            <!-- Headers (CUSTOMIZE THIS FOR YOUR ART) -->
+            <h1>Clave Currents</h1>
+            <div class="subtitle">Partnered silk ribbons that turn on the accents of a 3-2 son clave. Deterministic and frame-seekable.</div>
+
+            <!-- Seed Section (ALWAYS KEEP THIS) -->
+            <div class="control-section">
+                <h3>Seed</h3>
+                <input type="number" id="seed-input" class="seed-input" value="1907" onchange="updateSeed()">
+                <div class="seed-controls">
+                    <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                    <button class="button secondary" onclick="nextSeed()">Next →</button>
+                </div>
+                <button class="button tertiary regen-button" onclick="randomSeedAndUpdate()">↻ Random</button>
+            </div>
+
+            <!-- Parameters Section (CUSTOMIZE THIS FOR YOUR ART) -->
+            <div class="control-section">
+                <h3>Parameters</h3>
+                <div class="control-group">
+                    <label>Partner pairs</label>
+                    <div class="slider-container">
+                        <input type="range" id="pairs" min="2" max="12" step="1" value="6" oninput="updateParam('pairs', this.value)">
+                        <span class="value-display" id="pairs-value">6</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Flow scale</label>
+                    <div class="slider-container">
+                        <input type="range" id="flowScale" min="0.4" max="1.8" step="0.1" value="1" oninput="updateParam('flowScale', this.value)">
+                        <span class="value-display" id="flowScale-value">1</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Orbit radius</label>
+                    <div class="slider-container">
+                        <input type="range" id="radius" min="40" max="220" step="5" value="120" oninput="updateParam('radius', this.value)">
+                        <span class="value-display" id="radius-value">120</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Trail length (s)</label>
+                    <div class="slider-container">
+                        <input type="range" id="trail" min="1" max="6" step="0.1" value="3.4" oninput="updateParam('trail', this.value)">
+                        <span class="value-display" id="trail-value">3.4</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Silk twist</label>
+                    <div class="slider-container">
+                        <input type="range" id="twist" min="0.2" max="3" step="0.1" value="1.4" oninput="updateParam('twist', this.value)">
+                        <span class="value-display" id="twist-value">1.4</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Glow</label>
+                    <div class="slider-container">
+                        <input type="range" id="glow" min="0.2" max="1" step="0.05" value="0.55" oninput="updateParam('glow', this.value)">
+                        <span class="value-display" id="glow-value">0.55</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Tempo (BPM)</label>
+                    <div class="slider-container">
+                        <input type="range" id="bpm" min="90" max="220" step="1" value="190" oninput="updateParam('bpm', this.value)">
+                        <span class="value-display" id="bpm-value">190</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colors Section (OPTIONAL - CUSTOMIZE OR REMOVE) -->
+            <div class="control-section">
+                <h3>Colors</h3>
+                <div class="color-group">
+                    <label>Burgundy</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color1" value="#6B0F2A" onchange="updateColor('color1', this.value)">
+                        <span class="color-value" id="color1-value">#6B0F2A</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>Crimson</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color2" value="#C8102E" onchange="updateColor('color2', this.value)">
+                        <span class="color-value" id="color2-value">#C8102E</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>Rose</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color3" value="#F2A7B5" onchange="updateColor('color3', this.value)">
+                        <span class="color-value" id="color3-value">#F2A7B5</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>Gold</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color4" value="#E8C27A" onchange="updateColor('color4', this.value)">
+                        <span class="color-value" id="color4-value">#E8C27A</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Section (ALWAYS KEEP THIS) -->
+            <div class="control-section">
+                <h3>Actions</h3>
+                <div class="button-row">
+                    <button class="button" onclick="resetParameters()">Reset</button>
+                    <button class="button secondary" onclick="saveCanvas('clave-currents-' + params.seed, 'png')">Download PNG</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Canvas Area -->
+        <div class="canvas-area">
+            <div id="canvas-container">
+                <div class="loading">Initializing generative art...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════════
+        // GENERATIVE ART PARAMETERS - CUSTOMIZE FOR YOUR ALGORITHM
+        // ═══════════════════════════════════════════════════════════════════════
+
+        // Algorithm library (identical to the video's src/components/claveCurrents.ts)
+        "use strict";
+        var Clave = (() => {
+          var __defProp = Object.defineProperty;
+          var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+          var __getOwnPropNames = Object.getOwnPropertyNames;
+          var __hasOwnProp = Object.prototype.hasOwnProperty;
+          var __export = (target, all) => {
+            for (var name in all)
+              __defProp(target, name, { get: all[name], enumerable: true });
+          };
+          var __copyProps = (to, from, except, desc) => {
+            if (from && typeof from === "object" || typeof from === "function") {
+              for (let key of __getOwnPropNames(from))
+                if (!__hasOwnProp.call(to, key) && key !== except)
+                  __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+            }
+            return to;
+          };
+          var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+        
+          // src/components/claveCurrents.ts
+          var claveCurrents_exports = {};
+          __export(claveCurrents_exports, {
+            DEFAULT_PARAMS: () => DEFAULT_PARAMS,
+            buildPairs: () => buildPairs,
+            drawClave: () => drawClave,
+            makeNoise: () => makeNoise
+          });
+          var DEFAULT_PARAMS = {
+            seed: 1907,
+            pairs: 6,
+            flowScale: 1,
+            radius: 120,
+            trail: 3.4,
+            twist: 1.4,
+            glow: 0.55,
+            bpm: 190,
+            palette: ["#6B0F2A", "#C8102E", "#F2A7B5", "#E8C27A"]
+          };
+          var CLAVE = [0, 1.5, 3, 5, 6];
+          var mulberry32 = (a) => () => {
+            a |= 0;
+            a = a + 1831565813 | 0;
+            let t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+          };
+          var makeNoise = (seed) => {
+            const r = mulberry32(seed);
+            const p = new Uint8Array(512);
+            const perm = Array.from({ length: 256 }, (_, i) => i);
+            for (let i = 255; i > 0; i--) {
+              const j = Math.floor(r() * (i + 1));
+              [perm[i], perm[j]] = [perm[j], perm[i]];
+            }
+            for (let i = 0; i < 512; i++) p[i] = perm[i & 255];
+            const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+            const lerp = (a, b, t) => a + t * (b - a);
+            const grad = (h, x, y, z) => {
+              const g = h & 15;
+              const u = g < 8 ? x : y;
+              const v = g < 4 ? y : g === 12 || g === 14 ? x : z;
+              return ((g & 1) === 0 ? u : -u) + ((g & 2) === 0 ? v : -v);
+            };
+            return (x, y, z) => {
+              const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+              x -= Math.floor(x);
+              y -= Math.floor(y);
+              z -= Math.floor(z);
+              const u = fade(x), v = fade(y), w = fade(z);
+              const A = p[X] + Y, AA = p[A] + Z, AB = p[A + 1] + Z, B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
+              return lerp(
+                lerp(lerp(grad(p[AA], x, y, z), grad(p[BA], x - 1, y, z), u), lerp(grad(p[AB], x, y - 1, z), grad(p[BB], x - 1, y - 1, z), u), v),
+                lerp(lerp(grad(p[AA + 1], x, y, z - 1), grad(p[BA + 1], x - 1, y, z - 1), u), lerp(grad(p[AB + 1], x, y - 1, z - 1), grad(p[BB + 1], x - 1, y - 1, z - 1), u), v),
+                w
+              );
+            };
+          };
+          var smooth = (x) => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+          var claveTurns = (b) => {
+            const cycle = Math.floor(b / 8);
+            let acc = cycle * CLAVE.length * Math.PI;
+            const inCycle = b - cycle * 8;
+            for (const c of CLAVE) acc += smooth((inCycle - c) / 0.9) * Math.PI;
+            return acc;
+          };
+          var buildPairs = (prm, w, h) => {
+            const r = mulberry32(prm.seed * 7 + 3);
+            return Array.from({ length: prm.pairs }, (_, i) => ({
+              ax: w * (0.15 + 0.7 * r()),
+              ay: h * (0.1 + 0.8 * ((i + r() * 0.6) / prm.pairs)),
+              ox: r() * 100,
+              oy: r() * 100,
+              spin: r() < 0.5 ? 1 : -1,
+              phase: r() * Math.PI * 2,
+              hue: r(),
+              scale: 0.7 + r() * 0.6
+            }));
+          };
+          var mix = (a, b, t) => {
+            const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+            const ch = (s) => [s >> 16 & 255, s >> 8 & 255, s & 255];
+            const [r1, g1, b1] = ch(pa), [r2, g2, b2] = ch(pb);
+            return [r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t].map((v) => Math.round(v));
+          };
+          var drawClave = (ctx, t, w, h, prm, noise, pairs, opts = {}) => {
+            var _a;
+            const intensity = (_a = opts.intensity) != null ? _a : 1;
+            if (opts.background) {
+              ctx.fillStyle = opts.background;
+              ctx.fillRect(0, 0, w, h);
+            }
+            const beatsPerSec = prm.bpm / 60;
+            const pos = (pr, tt) => {
+              const k = 0.32 * prm.flowScale;
+              const cx = pr.ax + (noise(pr.ox, tt * k, 0.5) * 0.85 + noise(pr.ox + 9, tt * k * 2.3, 2.1) * 0.25) * w * 0.75 * prm.flowScale;
+              const cy = pr.ay + (noise(pr.oy, tt * k, 7.3) * 0.85 + noise(pr.oy + 9, tt * k * 2.3, 4.4) * 0.25) * h * 0.45 * prm.flowScale;
+              const b = tt * beatsPerSec;
+              const theta = pr.phase + pr.spin * (tt * 0.25 + claveTurns(b) * 0.3);
+              const rad = prm.radius * pr.scale * (0.55 + 0.45 * Math.sin(b / 8 * Math.PI * 2 + pr.phase));
+              return { cx, cy, theta, rad };
+            };
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            const steps = 110;
+            for (const pr of pairs) {
+              for (const side of [1, -1]) {
+                const pts = [];
+                for (let k = 0; k <= steps; k++) {
+                  const s = k / steps;
+                  const tt = t - prm.trail * (1 - s);
+                  const q = pos(pr, tt);
+                  pts.push({
+                    x: q.cx + side * Math.cos(q.theta) * q.rad,
+                    y: q.cy + side * Math.sin(q.theta) * q.rad,
+                    tw: Math.cos(tt * prm.twist * 2 + pr.phase + (side > 0 ? 0 : 1.3)),
+                    s
+                  });
+                }
+                for (let k = 1; k < pts.length; k++) {
+                  const a = pts[k - 1], b = pts[k];
+                  const dx = b.x - a.x, dy = b.y - a.y;
+                  const len = Math.hypot(dx, dy) || 1;
+                  const nx = -dy / len, ny = dx / len;
+                  const width = (3 + 30 * Math.pow(b.s, 1.1)) * pr.scale * (0.25 + 0.75 * Math.abs(b.tw)) * intensity;
+                  const wa = (3 + 30 * Math.pow(a.s, 1.1)) * pr.scale * (0.25 + 0.75 * Math.abs(a.tw)) * intensity;
+                  const ci = Math.min(prm.palette.length - 2, Math.floor((pr.hue + b.s * 0.6) * (prm.palette.length - 1)) % (prm.palette.length - 1));
+                  const [r, g2, bl] = mix(prm.palette[ci], prm.palette[ci + 1], (pr.hue * 3 + b.s) % 1);
+                  const back = b.tw < 0 ? 0.45 : 1;
+                  const alpha = Math.pow(b.s, 1.2) * prm.glow * back * 0.55 * intensity;
+                  ctx.fillStyle = `rgba(${r},${g2},${bl},${alpha.toFixed(3)})`;
+                  ctx.beginPath();
+                  ctx.moveTo(a.x + nx * wa, a.y + ny * wa);
+                  ctx.lineTo(b.x + nx * width, b.y + ny * width);
+                  ctx.lineTo(b.x - nx * width, b.y - ny * width);
+                  ctx.lineTo(a.x - nx * wa, a.y - ny * wa);
+                  ctx.closePath();
+                  ctx.fill();
+                  if (b.tw > 0.6) {
+                    ctx.strokeStyle = `rgba(255,240,210,${(alpha * 0.8).toFixed(3)})`;
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(a.x + nx * wa, a.y + ny * wa);
+                    ctx.lineTo(b.x + nx * width, b.y + ny * width);
+                    ctx.stroke();
+                  }
+                }
+                const head = pts[pts.length - 1];
+                const g = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 26 * pr.scale);
+                g.addColorStop(0, `rgba(255,236,190,${0.8 * intensity})`);
+                g.addColorStop(1, "rgba(255,236,190,0)");
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(head.x, head.y, 26 * pr.scale, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+            for (let i = 0; i < 90; i++) {
+              const px = i * 97.13 % w + noise(i * 0.37, t * 0.08, 3.1) * 120;
+              const py = (i * 211.7 % h - t * (12 + i % 7 * 4) + h * 10) % h;
+              const tw = 0.5 + 0.5 * Math.sin(t * 3 + i);
+              ctx.fillStyle = `rgba(232,194,122,${(0.15 + 0.5 * tw) * intensity})`;
+              ctx.beginPath();
+              ctx.arc(px, py, 1.4 + i % 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          };
+          return __toCommonJS(claveCurrents_exports);
+        })();
+
+        let params = {
+            seed: 1907,
+            pairs: 6, flowScale: 1, radius: 120, trail: 3.4, twist: 1.4, glow: 0.55, bpm: 190,
+            colorPalette: ['#6B0F2A', '#C8102E', '#F2A7B5', '#E8C27A']
+        };
+        let defaultParams = JSON.parse(JSON.stringify(params));
+        let noiseFn, pairs, t0 = 0;
+        const CW = 720, CH = 1280;
+
+        function claveParams() {
+            return {seed: params.seed, pairs: params.pairs, flowScale: params.flowScale, radius: params.radius * CW / 1080,
+                    trail: params.trail, twist: params.twist, glow: params.glow, bpm: params.bpm, palette: params.colorPalette};
+        }
+
+        function setup() {
+            let canvas = createCanvas(CW, CH);
+            canvas.parent('canvas-container');
+            initializeSystem();
+            document.querySelector('.loading').style.display = 'none';
+        }
+
+        function initializeSystem() {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+            noiseFn = Clave.makeNoise(params.seed);
+            pairs = Clave.buildPairs(claveParams(), CW, CH);
+            t0 = millis();
+        }
+
+        function draw() {
+            const ctx = drawingContext;
+            const g = ctx.createRadialGradient(CW / 2, CH * 0.4, 0, CW / 2, CH * 0.4, CH * 0.75);
+            g.addColorStop(0, '#3A0718');
+            g.addColorStop(1, '#12030A');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, CW, CH);
+            Clave.drawClave(ctx, (millis() - t0) / 1000 + 4, CW, CH, claveParams(), noiseFn, pairs, {});
+        }
+
+        function updateParam(paramName, value) {
+            params[paramName] = parseFloat(value);
+            document.getElementById(paramName + '-value').textContent = value;
+            if (paramName === 'pairs') pairs = Clave.buildPairs(claveParams(), CW, CH);
+        }
+
+        function updateColor(colorId, value) {
+            const idx = parseInt(colorId.replace('color', '')) - 1;
+            params.colorPalette[idx] = value;
+            document.getElementById(colorId + '-value').textContent = value;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SEED CONTROL FUNCTIONS - ALWAYS KEEP THESE
+        // ═══════════════════════════════════════════════════════════════════════
+
+        function updateSeedDisplay() {
+            document.getElementById('seed-input').value = params.seed;
+        }
+
+        function updateSeed() {
+            let input = document.getElementById('seed-input');
+            let newSeed = parseInt(input.value);
+            if (newSeed && newSeed > 0) {
+                params.seed = newSeed;
+                initializeSystem();
+            } else {
+                // Reset to current seed if invalid
+                updateSeedDisplay();
+            }
+        }
+
+        function previousSeed() {
+            params.seed = Math.max(1, params.seed - 1);
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        function nextSeed() {
+            params.seed = params.seed + 1;
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        function randomSeedAndUpdate() {
+            params.seed = Math.floor(Math.random() * 999999) + 1;
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        function resetParameters() {
+            params = JSON.parse(JSON.stringify(defaultParams));
+            ['pairs','flowScale','radius','trail','twist','glow','bpm'].forEach(k => {
+                document.getElementById(k).value = params[k];
+                document.getElementById(k + '-value').textContent = params[k];
+            });
+            params.colorPalette.forEach((c, i) => {
+                document.getElementById('color' + (i + 1)).value = c;
+                document.getElementById('color' + (i + 1) + '-value').textContent = c;
+            });
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        // Initialize UI on load
+        window.addEventListener('load', function() {
+            updateSeedDisplay();
+        });
+    </script>
+</body>
+</html>

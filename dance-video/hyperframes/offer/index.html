@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="./assets/gsap.min.js"></script>
+    <style>
+      /* Word timings come from ./timing.json (written by scripts/build_audio.py). */
+      @font-face { font-family: 'Playfair Display'; font-weight: 900; font-style: italic; font-display: block; src: url(./assets/fonts/playfair-display-latin-900-italic.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+      @font-face { font-family: 'Playfair Display'; font-weight: 900; font-style: italic; font-display: block; src: url(./assets/fonts/playfair-display-cyrillic-900-italic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+      @font-face { font-family: 'Jost'; font-weight: 500; font-display: block; src: url(./assets/fonts/jost-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+      @font-face { font-family: 'Jost'; font-weight: 500; font-display: block; src: url(./assets/fonts/jost-cyrillic-500-normal.woff2) format('woff2'); unicode-range: U+0400-045F; }
+      :root { --night: #12030a; --wine: #3a0718; --burgundy: #6b0f2a; --crimson: #c8102e; --rose: #f2a7b5; --gold: #e8c27a; --gold-deep: #b8893b; --cream: #fff4e6; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--night); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+      .layer { position: absolute; inset: 0; }
+      #bg { background: radial-gradient(ellipse at 50% 52%, var(--burgundy) 0%, var(--wine) 35%, var(--night) 75%); }
+      .gold { background: linear-gradient(100deg, #fbe7b5 0%, var(--gold) 35%, var(--gold-deep) 60%, #fbe7b5 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      #kicker { position: absolute; top: 200px; left: 0; right: 0; text-align: center; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 44px; letter-spacing: 0.3em; color: var(--rose); }
+      #title { position: absolute; top: 270px; left: 40px; right: 40px; text-align: center; font-family: 'Playfair Display', serif; font-style: italic; font-weight: 900; font-size: 116px; line-height: 1; }
+      #sub { position: absolute; top: 540px; left: 0; right: 0; text-align: center; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 46px; color: var(--cream); }
+      #rays { position: absolute; left: 540px; top: 960px; width: 1600px; height: 1600px; margin: -800px 0 0 -800px; border-radius: 50%;
+        background: repeating-conic-gradient(from 0deg, rgba(232,194,122,0.28) 0deg 6deg, transparent 6deg 18deg);
+        -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 62%); mask-image: radial-gradient(circle, #000 0%, transparent 62%); opacity: 0; }
+      #gift { position: absolute; left: 540px; top: 1000px; width: 380px; height: 330px; margin-left: -190px; }
+      #box { position: absolute; left: 0; bottom: 0; width: 380px; height: 260px; border-radius: 14px; background: linear-gradient(160deg, var(--crimson), var(--burgundy)); box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 6px 0 rgba(255,255,255,0.2); }
+      #box .rv { position: absolute; left: 165px; top: 0; bottom: 0; width: 50px; background: linear-gradient(90deg, var(--gold-deep), var(--gold), var(--gold-deep)); }
+      #lid { position: absolute; left: -16px; top: 30px; width: 412px; height: 80px; border-radius: 14px; background: linear-gradient(160deg, #e0233f, var(--crimson)); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+      #lid .rv { position: absolute; left: 181px; top: 0; bottom: 0; width: 50px; background: linear-gradient(90deg, var(--gold-deep), var(--gold), var(--gold-deep)); }
+      #bow { position: absolute; left: 136px; top: -70px; width: 140px; height: 90px; }
+      #bow i { position: absolute; top: 10px; width: 70px; height: 70px; border: 16px solid var(--gold); border-radius: 50% 50% 50% 0; }
+      #bow i:first-child { left: 0; transform: rotate(-30deg); }
+      #bow i:last-child { right: 0; transform: rotate(120deg); }
+      .conf { position: absolute; left: 540px; top: 1060px; width: 16px; height: 30px; border-radius: 3px; }
+      .card { position: absolute; left: 80px; right: 80px; padding: 34px 40px; border-radius: 30px; background: rgba(58,7,24,0.82); border: 2px solid rgba(232,194,122,0.55); display: flex; align-items: center; gap: 28px; box-shadow: 0 30px 70px rgba(0,0,0,0.5); }
+      .card .e { font-size: 88px; }
+      .card .t1 { font-family: 'Playfair Display', serif; font-style: italic; font-weight: 900; font-size: 52px; line-height: 1.05; }
+      .card .t2 { font-family: 'Jost', sans-serif; font-weight: 500; font-size: 34px; color: var(--cream); margin-top: 6px; }
+      #c1 { top: 1360px; }
+      #c2 { top: 1630px; }
+      .curtain { position: absolute; top: 0; bottom: 0; width: 544px;
+        background: repeating-linear-gradient(90deg, #5a0a1e 0px, #8e1430 38px, #b01a3a 60px, #8e1430 82px, #5a0a1e 120px); }
+      .curtain::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 60px; background: repeating-linear-gradient(90deg, var(--gold) 0 6px, var(--gold-deep) 6px 12px); opacity: 0.9; }
+      .curtain::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 120px; background: linear-gradient(rgba(0,0,0,0.55), transparent); }
+      #cl { left: 0; box-shadow: inset -30px 0 60px rgba(0,0,0,0.6); }
+      #cr { right: 0; box-shadow: inset 30px 0 60px rgba(0,0,0,0.6); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="11.733" data-width="1080" data-height="1920">
+      <div id="scene" class="clip layer" data-start="0" data-duration="11.733" data-track-index="0">
+        <div id="bg" class="layer"></div>
+        <div id="rays"></div>
+        <div id="kicker">ДЛЯ НОВЫХ КЛИЕНТОВ</div>
+        <div id="title"><span class="gold">Специальное предложение</span></div>
+        <div id="sub">при заказе сайта вы получите:</div>
+        <div id="gift">
+          <div id="box"><div class="rv"></div></div>
+          <div id="lid"><div class="rv"></div><div id="bow"><i></i><i></i></div></div>
+        </div>
+        <div id="confetti"></div>
+        <div class="card" id="c1"><div class="e">🎁</div><div><div class="t1 gold">Персональная консультация</div><div class="t2">по развитию вашего онлайн-проекта</div></div></div>
+        <div class="card" id="c2"><div class="e">⚙️</div><div><div class="t1 gold">Рекомендации</div><div class="t2">по автоматизации бизнеса</div></div></div>
+        <div class="curtain" id="cl"></div>
+        <div class="curtain" id="cr"></div>
+      </div>
+    </div>
+    <script>
+      const DUR = 11.733;
+      const W = { special: 0.334, offer: 1.014, newc: 1.734, when: 3.294, get: 4.534, consult: 5.654, recs: 8.934, auto: 9.974 };
+
+      // deterministic confetti
+      const conf = document.getElementById('confetti');
+      const cols = ['#e8c27a', '#c8102e', '#f2a7b5', '#fff4e6', '#b8893b'];
+      const N = 46;
+      for (let i = 0; i < N; i++) {
+        const d = document.createElement('div');
+        d.className = 'conf';
+        d.style.background = cols[i % cols.length];
+        conf.appendChild(d);
+      }
+      const rnd = (s) => { const x = Math.sin(s * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+
+      const tl = gsap.timeline({ paused: true });
+
+      // curtains open (mirrors the Remotion curtain that closed into this insert)
+      tl.fromTo('#cl', { x: 0 }, { x: -560, duration: 20 / 30, ease: 'power2.inOut' }, 0);
+      tl.fromTo('#cr', { x: 0 }, { x: 560, duration: 20 / 30, ease: 'power2.inOut' }, 0);
+
+      tl.from('#kicker', { y: -40, opacity: 0, duration: 0.5, ease: 'power2.out' }, W.newc - 0.3);
+      tl.from('#title', { y: 60, opacity: 0, filter: 'blur(12px)', duration: 0.7, ease: 'power3.out' }, W.special - 0.1);
+      tl.from('#gift', { y: 500, scale: 0.6, duration: 0.8, ease: 'back.out(1.6)' }, 0.25);
+      tl.fromTo('#gift', { rotation: 0 }, { rotation: 4, duration: 0.08, yoyo: true, repeat: 7, ease: 'sine.inOut', immediateRender: false }, W.offer - 0.6);
+
+      // lid pops off, rays + confetti burst on "предложение"
+      tl.to('#lid', { y: -420, x: 160, rotation: 38, duration: 0.7, ease: 'power3.out' }, W.offer);
+      tl.to('#lid', { opacity: 0, duration: 0.4 }, W.offer + 0.5);
+      tl.fromTo('#rays', { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.7, ease: 'power2.out' }, W.offer);
+      tl.fromTo('#rays', { rotation: 0 }, { rotation: 60, duration: DUR - W.offer, ease: 'none', immediateRender: false }, W.offer);
+      gsap.utils.toArray('.conf').forEach((el, i) => {
+        const a = rnd(i) * Math.PI * 2;
+        const v = 380 + rnd(i * 3.1) * 520;
+        tl.fromTo(el, { x: 0, y: 0, rotation: 0, opacity: 1 },
+          { x: Math.cos(a) * v, y: Math.sin(a) * v - 260, rotation: (rnd(i * 7) - 0.5) * 900, opacity: 0, duration: 1.6 + rnd(i * 5) * 0.6, ease: 'power2.out' }, W.offer + rnd(i * 2) * 0.12);
+      });
+
+      tl.from('#sub', { opacity: 0, y: 30, duration: 0.5, ease: 'power2.out' }, W.when - 0.1);
+      // gift slides up and shrinks to make room for the cards
+      tl.to('#gift', { y: -260, scale: 0.72, duration: 0.7, ease: 'power3.inOut' }, W.get - 0.4);
+      tl.to('#rays', { y: -260, duration: 0.7, ease: 'power3.inOut' }, W.get - 0.4);
+      tl.from('#c1', { x: -1100, duration: 0.7, ease: 'power3.out' }, W.consult - 0.6);
+      tl.from('#c2', { x: 1100, duration: 0.7, ease: 'power3.out' }, W.recs - 0.4);
+
+      // curtains close exactly at the cut (Remotion opens them on the CTA)
+      tl.fromTo('#cl', { x: -560 }, { x: 0, duration: 16 / 30, ease: 'power2.inOut', immediateRender: false }, DUR - 16 / 30);
+      tl.fromTo('#cr', { x: 560 }, { x: 0, duration: 16 / 30, ease: 'power2.inOut', immediateRender: false }, DUR - 16 / 30);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
