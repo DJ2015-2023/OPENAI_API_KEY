@@ -1,4 +1,4 @@
-"""Builds narration (neural Piper voice "denis" via sherpa-onnx), synthesized cinematic music + SFX, and the timing map.
+"""Builds narration (ElevenLabs "Liam" clips in narration/, Piper "denis" fallback), synthesized cinematic music + SFX, and the timing map.
 
 Outputs:
   src/timing.json          scene/phrase frame timings consumed by Remotion
@@ -8,7 +8,6 @@ Outputs:
 import json
 import os
 import numpy as np
-import sherpa_onnx
 from scipy import signal
 from scipy.io import wavfile
 
@@ -43,7 +42,22 @@ LEAD_IN = 0.45
 _TTS = None
 
 
+def load_clip(pid, text):
+    """Pre-rendered ElevenLabs clip (generated through Speko) if present, else local Piper TTS."""
+    path = os.path.join(ROOT, "narration", f"{pid}.wav")
+    if not os.path.exists(path):
+        return tts(text)
+    sr, x = wavfile.read(path)
+    x = x.astype(np.float32) / (32768.0 if x.dtype == np.int16 else 1.0)
+    if x.ndim > 1:
+        x = x.mean(axis=1)
+    x = signal.resample_poly(x, SR, sr).astype(np.float32)
+    return trim(x)
+
+
 def tts(text):
+    import sherpa_onnx
+
     global _TTS
     if _TTS is None:
         vits = sherpa_onnx.OfflineTtsVitsModelConfig(
@@ -58,6 +72,10 @@ def tts(text):
     audio = _TTS.generate(text, sid=0, speed=1.0)
     x = np.asarray(audio.samples, dtype=np.float32)
     x = signal.resample_poly(x, SR, audio.sample_rate).astype(np.float32)
+    return trim(x)
+
+
+def trim(x):
     # trim silence
     env = np.abs(x) > 0.004
     idx = np.where(env)[0]
@@ -327,7 +345,7 @@ def place(buf, clip, at, gain=1.0, pan=0.0):
 def main():
     voices = {}
     for pid, scene, text, gap in PHRASES:
-        voices[pid] = voice_fx(tts(text))
+        voices[pid] = voice_fx(load_clip(pid, text))
 
     # sequential layout
     t = LEAD_IN
