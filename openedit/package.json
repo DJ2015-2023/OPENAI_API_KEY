@@ -1,0 +1,7 @@
+{
+  "name": "openedit",
+  "private": true,
+  "devDependencies": {
+    "@veedstudio/openedit-cli": "0.4.0"
+  }
+}
