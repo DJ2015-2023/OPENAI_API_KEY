@@ -1,4 +1,4 @@
-"""Builds narration (RHVoice), synthesized cinematic music + SFX, and the timing map.
+"""Builds narration (neural Piper voice "denis" via sherpa-onnx), synthesized cinematic music + SFX, and the timing map.
 
 Outputs:
   src/timing.json          scene/phrase frame timings consumed by Remotion
@@ -7,17 +7,15 @@ Outputs:
 """
 import json
 import os
-import subprocess
-import tempfile
-
 import numpy as np
+import sherpa_onnx
 from scipy import signal
 from scipy.io import wavfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SR = 48000
 FPS = 30
-VOICE = "aleksandr-hq"
+VOICE_DIR = os.path.join(ROOT, "models/vits-piper-ru_RU-denis-medium")  # fetched by scripts/get_voice.sh
 XFADE = 0.5  # Remotion -> HyperFrames crossfade (seconds)
 
 # (id, scene, text spoken, gap after in seconds)
@@ -30,7 +28,7 @@ PHRASES = [
     ("c2", "channels", "в единую систему,", 0.35),
     ("f1", "features", "мгновенно отвечает клиентам,", 0.1),
     ("f2", "features", "принимает заявки,", 0.1),
-    ("f3", "features", "автоматизирует запись", 0.08),
+    ("f3", "features", "автоматизирует запись,", 0.08),
     ("f4", "features", "и помогает увеличивать продажи.", 0.5),
     ("r1", "result", "Ни одного пропущенного обращения!", 0.3),
     ("r2", "result", "Больше клиентов,", 0.1),
@@ -42,37 +40,43 @@ PHRASES = [
 LEAD_IN = 0.45
 
 
+_TTS = None
+
+
 def tts(text):
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        path = tmp.name
-    subprocess.run(
-        ["RHVoice-test", "-p", VOICE, "-q", "max", "-r", "112", "-t", "104", "-R", str(SR), "-o", path],
-        input=text.encode(), check=True, capture_output=True,
-    )
-    sr, x = wavfile.read(path)
-    os.unlink(path)
-    x = x.astype(np.float32) / 32768.0
-    if sr != SR:
-        x = signal.resample_poly(x, SR, sr).astype(np.float32)
+    global _TTS
+    if _TTS is None:
+        vits = sherpa_onnx.OfflineTtsVitsModelConfig(
+            model=os.path.join(VOICE_DIR, "ru_RU-denis-medium.onnx"),
+            tokens=os.path.join(VOICE_DIR, "tokens.txt"),
+            data_dir=os.path.join(VOICE_DIR, "espeak-ng-data"),
+            noise_scale=0.72,  # livelier intonation
+            noise_scale_w=0.9,  # more natural rhythm
+            length_scale=0.93,  # slightly brisk ad-read pace
+        )
+        _TTS = sherpa_onnx.OfflineTts(sherpa_onnx.OfflineTtsConfig(model=sherpa_onnx.OfflineTtsModelConfig(vits=vits, num_threads=4)))
+    audio = _TTS.generate(text, sid=0, speed=1.0)
+    x = np.asarray(audio.samples, dtype=np.float32)
+    x = signal.resample_poly(x, SR, audio.sample_rate).astype(np.float32)
     # trim silence
-    env = np.abs(x) > 0.01
+    env = np.abs(x) > 0.004
     idx = np.where(env)[0]
-    x = x[max(0, idx[0] - int(0.02 * SR)): idx[-1] + int(0.06 * SR)]
+    x = x[max(0, idx[0] - int(0.09 * SR)): idx[-1] + int(0.08 * SR)]
     return x
 
 
 def voice_fx(x):
-    """Young, punchy ad-read polish: HPF, presence lift, air, compression, short room."""
+    """Light ad-read polish: HPF, presence lift, air, compression, short room."""
     b, a = signal.butter(2, 90 / (SR / 2), "high")
     x = signal.lfilter(b, a, x)
     # presence peak ~3.2k
-    b, a = peaking(3200, 4.0, 1.0)
+    b, a = peaking(3200, 2.0, 1.0)
     x = signal.lfilter(b, a, x)
-    b, a = peaking(180, 2.5, 0.8)  # chest warmth
+    b, a = peaking(160, 2.0, 0.8)  # chest warmth
     x = signal.lfilter(b, a, x)
-    b, a = shelf_high(9000, 3.0)
+    b, a = shelf_high(9000, 2.0)
     x = signal.lfilter(b, a, x)
-    x = compress(x, thresh=0.18, ratio=3.5)
+    x = compress(x, thresh=0.25, ratio=2.2)
     x = x / (np.abs(x).max() + 1e-9) * 0.92
     # subtle room
     ir = np.random.default_rng(3).standard_normal(int(0.35 * SR)) * np.exp(-np.linspace(0, 9, int(0.35 * SR)))
