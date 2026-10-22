@@ -1,0 +1,23 @@
+{
+  "name": "ai-assistant-video",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render AIAssistant out/video.mp4"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.2.0",
+    "@remotion/cli": "^4.0.537",
+    "@remotion/media-utils": "^4.0.537",
+    "@remotion/three": "^4.0.537",
+    "@remotion/transitions": "^4.0.537",
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "hyperframes": "^0.8.185",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "^4.0.537",
+    "three": "^0.178.0",
+    "typescript": "^7.0.2"
+  }
+}
