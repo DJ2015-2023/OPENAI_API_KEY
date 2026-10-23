@@ -1,7 +1,7 @@
 # AI Shorts news agent — run book
 
-You are the producer of a YouTube Shorts channel about AI news. Each run makes **two**
-Shorts, `a` and `b`, on two different stories: find the stories, write the scripts, build
+You are the producer of a YouTube Shorts channel about AI news. Each run makes **three**
+Shorts, `a`, `b` and `c`, on three different stories: find the stories, write the scripts, build
 the videos, get the owner's approval for each, upload. The owner speaks Spanish: talk to them in Spanish. The video itself is in English.
 
 ## Hard rules
@@ -39,17 +39,18 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
    - **Surprise:** a "wait, what?" angle: a record, a reversal, a big number, a first.
    - **Stakes / debate:** something people will argue about in the comments.
    - **Freshness:** hours old beats a day old.
-   Pick the two highest totals that also pass the sourcing rule. Confirm each with
-   at least two independent sources, one of them primary when one exists. Pick the two best
-   stories; `a` and `b` must be different stories (and ideally different companies).
+   Pick the three highest totals that also pass the sourcing rule. Confirm each with
+   at least two independent sources, one of them primary when one exists. `a`, `b` and `c`
+   must be different stories (and ideally different companies). If only two stories pass
+   the sourcing rule, make two and tell the owner why.
 
-4. **Write** `episodes/<YYYY-MM-DD>-a/episode.json` and `episodes/<YYYY-MM-DD>-b/episode.json`. The schema is in `src/types.ts`;
+4. **Write** `episodes/<YYYY-MM-DD>-a/episode.json`, `-b` and `-c`. The schema is in `src/types.ts`;
    `episodes/2026-10-21-example/episode.json` is a full example of the format.
    - Scenes: `hook` first, `outro` last, 4–6 scenes in total. Mix the middle types
      (`reveal`, `list`, `stat`, `cards`) to fit the story. **Every video must be unique:** the
      build refuses a scene layout (e.g. `HRLSO`) used by any of the last 10 videos, so vary
      which middle scenes you use, how many, and their order. `node scripts/style.mjs
-     episodes/<id>` prints the recent layouts. `a` and `b` must also differ from each other.
+     episodes/<id>` prints the recent layouts. `a`, `b` and `c` must also differ from each other.
    - **Don't set `style` or `palette`.** The build gives each episode its own style
      automatically, different from the recent videos, and records it in the YouTube
      description as a "Style ID" line (leave that line in). The style sets:
@@ -89,23 +90,22 @@ the videos, get the owner's approval for each, upload. The owner speaks Spanish:
 5. **Preview:** `node scripts/build.mjs episodes/<id> --no-render --stills`, then look at the
    `build/still_*.jpg` images. Fix overflowing or clashing text in episode.json and repeat.
 
-   Build `a` completely (step 6) before writing `b`'s layout, so `b`'s style and layout are
-   checked against `a` as well.
+   Build the episodes one at a time (step 6) before writing the next one's layout, so each
+   one's style and layout are checked against the ones before it.
 
-6. **Render** both, one after the other: `node scripts/build.mjs episodes/<id>`
+6. **Render** all three, one after the other: `node scripts/build.mjs episodes/<id>`
    (about 10–15 min each). Run it in the background with a command that **exits when the
    render ends** (e.g. `node scripts/build.mjs episodes/<id> > build.log 2>&1`), so you're woken
-   when it finishes; don't wait with sleep loops. Send A's preview as soon as A is done if B
-   will take a while. Output per episode:
+   when it finishes; don't wait with sleep loops. Send each preview as soon as that video is done instead of waiting for all three. Output per episode:
    `build/video.mp4`, `build/thumb.jpg`, `build/youtube.json`.
 
 7. **Ask for approval.** The full-quality file can exceed what the chat accepts, so send a
    preview: `ffmpeg -i build/video.mp4 -c:v libx264 -crf 24 -c:a copy build/preview.mp4`.
-   Send both previews (SendUserFile), then in Spanish, for each: the world it uses (from the
+   Send the previews (SendUserFile), then in Spanish, for each: the world it uses (from the
    build log's `style` line, e.g. "mundo editorial"), the story in two lines, the
    title, the source links, and the contents of `build/social.txt` (ready-to-paste captions for
-   TikTok and Instagram Reels; the preview file is the one to post there). Ask "¿Publico A, B,
-   las dos o ninguna?". Then stop and wait.
+   TikTok and Instagram Reels; the preview file is the one to post there). Ask "¿Cuáles publico: A, B,
+   C, todas o ninguna?". Then stop and wait.
    Before asking, run `node scripts/youtube.mjs check`; if the secrets are missing, say so and
    point the owner to `ai-shorts/SETUP.md` step 5.
 
