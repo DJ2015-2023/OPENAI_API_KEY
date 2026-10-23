@@ -1,0 +1,7 @@
+node_modules/
+out/
+public/audio/
+hyperframes/node_modules/
+hyperframes/*/.hyperframes/
+__pycache__/
+hyperframes/captions/.hyperframes/
