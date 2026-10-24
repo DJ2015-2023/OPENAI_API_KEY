@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, Easing, Img, OffthreadVideo, interpolate, staticFile, useCurrentFrame} from 'remotion';
-import {Bats, Embers, Fog, Lightning, Moon, Sky, Web} from '../components/FX';
+import {Bats, Embers, Fog, Lightning, Logo, Moon, Sky, Web} from '../components/FX';
 import {Pumpkin3D} from '../components/Pumpkin3D';
 import {Eyes, Mask, MoonGlyph} from '../components/Shapes';
 import {C, COND, DISPLAY, HORROR, SERIF, T, clamp, ease, kick, rand, snap, wf} from '../theme';
@@ -212,24 +212,19 @@ export const Finale: React.FC = () => {
   return (
     <AbsoluteFill style={{transform: `scale(${1 + 0.015 * k})`}}>
       <Sky top="#040106" bottom="#3a0508" glow={`rgba(224,16,47,${0.25 + 0.2 * k})`} glowY={75} />
-      <Moon size={340} x={820} y={250} glow={0.9} tint="rgba(220,40,40,0.55)" />
       <Fog opacity={0.45} speed={2.4} tint="rgba(255,60,60,1)" />
       <Lightning at={w(7) - 2} seed={77} x={220} len={800} />
-      <div style={{position: 'absolute', top: 210, left: 0, right: 0, textAlign: 'center'}}>
-        {['LATIN', 'FUSION', 'PARTY'].map((t, i) => (
-          <Slam key={t} at={w(i) - 2} from={1.8}>
-            <div style={{fontFamily: DISPLAY, fontWeight: 800, fontSize: 120, lineHeight: 1.02, color: i === 1 ? C.pumpkin : C.bone}}>{t}</div>
-          </Slam>
-        ))}
-        <div style={{marginTop: 60}}>
+      <Logo size={680} at={w(0) - 3} pulse={k} style={{left: 200, top: 70}} />
+      <div style={{position: 'absolute', top: 720, left: 0, right: 0, textAlign: 'center'}}>
+        <div>
           <Rise at={w(3) - 2}>
             <div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 500, fontSize: 72, color: C.bone}}>Этой ночью танцы будут…</div>
           </Rise>
           <Slam at={w(7) - 2} from={2.2}>
-            <div style={{fontFamily: HORROR, fontSize: 132, color: C.blood, lineHeight: 1.05, marginTop: 20, textShadow: `0 0 ${30 + 40 * k}px rgba(224,16,47,0.7)`}}>ОПАСНО</div>
+            <div style={{fontFamily: HORROR, fontSize: 132, color: '#FF2A45', lineHeight: 1.05, marginTop: 20, textShadow: `0 6px 0 #2a0005, 0 0 ${30 + 40 * k}px rgba(0,0,0,0.6)`}}>ОПАСНО</div>
           </Slam>
           <Rise at={w(8) - 2}>
-            <div style={{fontFamily: HORROR, fontSize: 76, color: C.blood, lineHeight: 1.05, textShadow: `0 0 ${30 + 40 * k}px rgba(224,16,47,0.7)`}}>ПРИТЯГАТЕЛЬНЫМИ</div>
+            <div style={{fontFamily: HORROR, fontSize: 76, color: '#FF2A45', lineHeight: 1.05, textShadow: `0 5px 0 #2a0005, 0 0 ${30 + 40 * k}px rgba(0,0,0,0.6)`}}>ПРИТЯГАТЕЛЬНЫМИ</div>
           </Rise>
         </div>
       </div>
@@ -249,17 +244,15 @@ export const End: React.FC = () => {
   return (
     <AbsoluteFill>
       <Sky top="#050208" bottom="#200712" glow={`rgba(255,106,0,${0.18 + 0.1 * k})`} glowY={30} />
-      <Moon size={300} x={540} y={250} glow={1} />
       <Web p={ease(f, 0, 60)} size={360} style={{left: -20, top: -20}} />
       <Web p={ease(f, 10, 70)} size={360} style={{right: -20, top: -20, transform: 'scaleX(-1)'}} />
       <Fog opacity={0.35} speed={1.2} />
       <Bats start={20} dur={110} y={420} seed={51} n={8} scale={0.8} />
-      <div style={{position: 'absolute', top: 440, left: 0, right: 0, textAlign: 'center'}}>
-        <div style={{fontFamily: DISPLAY, fontWeight: 800, fontSize: 112, lineHeight: 1.0, color: C.bone, ...row(0)}}>LATIN FUSION</div>
-        <div style={{fontFamily: DISPLAY, fontWeight: 800, fontSize: 112, lineHeight: 1.0, color: C.bone, ...row(3)}}>PARTY</div>
-        <div style={{fontFamily: HORROR, fontSize: 80, color: C.pumpkin, marginTop: 10, textShadow: '0 0 30px rgba(255,106,0,0.6)', ...row(6)}}>HALLOWEEN EDITION</div>
+      <Logo size={640} at={0} pulse={k} style={{left: 220, top: 60}} />
+      <div style={{position: 'absolute', top: 700, left: 0, right: 0, textAlign: 'center'}}>
+        <div style={{fontFamily: HORROR, fontSize: 84, color: C.pumpkin, textShadow: '0 0 30px rgba(255,106,0,0.6)', ...row(6)}}>HALLOWEEN EDITION</div>
       </div>
-      <div style={{position: 'absolute', top: 830, left: 100, right: 100, display: 'flex', flexDirection: 'column', gap: 22}}>
+      <div style={{position: 'absolute', top: 850, left: 100, right: 100, display: 'flex', flexDirection: 'column', gap: 22}}>
         {[
           ['📅', '31 ОКТЯБРЯ | СУББОТА'],
           ['⏰', '23:30 – 05:00'],
@@ -271,7 +264,7 @@ export const End: React.FC = () => {
           </div>
         ))}
       </div>
-      <div style={{position: 'absolute', top: 1250, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', ...row(30)}}>
+      <div style={{position: 'absolute', top: 1270, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', ...row(30)}}>
         <div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 54, color: C.gold}}>👉 Подробности и видео:</div>
         <div style={{display: 'flex', alignItems: 'center', gap: 40, marginTop: 30}}>
           <div style={{padding: 12, background: C.bone, borderRadius: 20, boxShadow: `0 0 ${30 + 30 * k}px rgba(255,106,0,0.5)`}}>

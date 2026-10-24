@@ -291,3 +291,29 @@ export const Web: React.FC<{p: number; size: number; style?: React.CSSProperties
 export const GlitchWord: React.FC<{children: React.ReactNode; size: number; color?: string}> = ({children, size, color = C.bone}) => (
   <div style={{fontFamily: GLITCH, fontSize: size, color, lineHeight: 1}}>{children}</div>
 );
+
+/* ---------- client logo (transparent PNG from scripts/make_logo.py) with spin-in reveal, light sweep and kick pulse ---------- */
+export const Logo: React.FC<{size: number; at: number; pulse?: number; style?: React.CSSProperties}> = ({size, at, pulse = 0, style}) => {
+  const f = useCurrentFrame();
+  const d = f - at;
+  const p = d < 0 ? 0 : 1 - Math.exp(-d / 5) * Math.cos(d / 4);
+  const o = ease(f, at, at + 6);
+  const sweep = ease(f, at + 8, at + 30);
+  return (
+    <div style={{position: 'absolute', width: size, height: size, opacity: o, transform: `scale(${(0.3 + 0.7 * p) * (1 + 0.035 * pulse)}) rotate(${(1 - Math.min(1, p)) * -25}deg)`, filter: `brightness(${1 + 0.6 * Math.max(0, 1 - d / 8) + 0.25 * pulse})`, ...style}}>
+      <Img src={staticFile('img/logo.png')} style={{width: size, height: size}} />
+      {sweep > 0 && sweep < 1 && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            WebkitMaskImage: `url(${staticFile('img/logo.png')})`,
+            WebkitMaskSize: '100% 100%',
+            background: `linear-gradient(115deg, transparent ${sweep * 140 - 30}%, rgba(255,255,255,0.75) ${sweep * 140 - 20}%, transparent ${sweep * 140 - 10}%)`,
+            mixBlendMode: 'screen',
+          }}
+        />
+      )}
+    </div>
+  );
+};

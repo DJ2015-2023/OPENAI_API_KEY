@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, Easing, interpolate, useCurrentFrame} from 'remotion';
-import {Bats, Embers, Fog, Glitchy, Lightning, Moon, Neon, Sky, Web} from '../components/FX';
+import {Bats, Embers, Fog, Glitchy, Lightning, Logo, Moon, Neon, Sky, Web} from '../components/FX';
 import {Pumpkin3D} from '../components/Pumpkin3D';
 import {House, Skyline} from '../components/Shapes';
 import {C, COND, DISPLAY, H, HORROR, SERIF, T, W, clamp, ease, kick, rand, shake, snap, wf} from '../theme';
@@ -282,26 +282,17 @@ export const Title: React.FC = () => {
   const w = (i: number) => wf('s05', i, 'title');
   const k = kick(abs);
   const appear = snap(f, 0, 12, 90);
-  const words = ['LATIN', 'FUSION', 'PARTY'];
   return (
     <AbsoluteFill>
       <Sky top="#050208" bottom="#2a0a05" glow={`rgba(255,106,0,${0.3 + 0.2 * k})`} glowY={62} />
       <Fog opacity={0.4} speed={2} tint="rgba(255,120,60,1)" />
       <Lightning at={w(3) - 2} seed={41} x={760} len={700} />
-      <div style={{position: 'absolute', top: 150, left: 0, right: 0, textAlign: 'center'}}>
-        {words.map((t, i) => {
-          const p = snap(f, w(i) - 3, 11, 240);
-          return (
-            <div key={t} style={{fontFamily: DISPLAY, fontWeight: 800, fontSize: 150, lineHeight: 1.0, color: C.bone, opacity: Math.min(1, p * 2), transform: `scale(${2 - p})`, letterSpacing: '-0.02em', textShadow: `0 0 ${20 + 30 * k}px rgba(255,106,0,0.6)`}}>
-              {t}
-            </div>
-          );
-        })}
-      </div>
-      <Pumpkin3D size={980} appear={appear} turn={interpolate(f, [0, 30], [-1.2, 0], {...clamp, easing: Easing.out(Easing.cubic)})} glow={0.6 + 0.6 * k} style={{left: 50, top: 720}} />
-      <Drip at={w(3) - 2} dur={14} style={{position: 'absolute', top: 690, left: 0, right: 0, textAlign: 'center'}}>
-        <div style={{fontFamily: HORROR, fontSize: 112, lineHeight: 1.05, color: C.pumpkin, textShadow: '0 6px 0 #4a0f00, 0 0 40px rgba(255,90,0,0.6)'}}>HALLOWEEN</div>
-        <div style={{fontFamily: HORROR, fontSize: 96, lineHeight: 1.05, color: C.blood, textShadow: '0 6px 0 #300008'}}>EDITION</div>
+      <Logo size={860} at={w(0) - 4} pulse={k} style={{left: 110, top: 40}} />
+      <Pumpkin3D size={900} appear={appear} turn={interpolate(f, [0, 30], [-1.2, 0], {...clamp, easing: Easing.out(Easing.cubic)})} glow={0.6 + 0.6 * k} style={{left: 90, top: 1040}} />
+      <Drip at={w(3) - 2} dur={14} style={{position: 'absolute', top: 905, left: 0, right: 0, textAlign: 'center'}}>
+        <div style={{fontFamily: HORROR, fontSize: 104, lineHeight: 1.0, color: C.pumpkin, textShadow: '0 6px 0 #4a0f00, 0 0 40px rgba(255,90,0,0.6)'}}>
+          HALLOWEEN <span style={{color: C.blood, textShadow: '0 6px 0 #300008'}}>EDITION</span>
+        </div>
       </Drip>
       <Embers n={50} seed={12} color={C.pumpkin} speed={1.6} />
     </AbsoluteFill>
