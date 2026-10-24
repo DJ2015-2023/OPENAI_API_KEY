@@ -112,15 +112,15 @@ const Rigs: React.FC = () => {
   const groove = ease(f, F.flash, F.flash + 20);
   for (let i = 0; i < 4; i++) {
     const sway = Math.sin(t * (0.6 + i * 0.13) + i) * (8 + 10 * groove);
-    beams.push(<Beam key={`r${i}`} x={40} y={150 + i * 230} angle={-60 + i * 8 + sway} color="rgba(255,40,30,0.42)" on={red * (0.75 + 0.25 * Math.sin(t * 3 + i))} len={1300} />);
-    beams.push(<Beam key={`b${i}`} x={1040} y={150 + i * 230} angle={60 - i * 8 - sway} color="rgba(40,120,255,0.42)" on={blue * (0.75 + 0.25 * Math.sin(t * 3.3 + i))} len={1300} />);
+    beams.push(<Beam key={`r${i}`} x={40} y={150 + i * 230} angle={-60 + i * 8 + sway} color="rgba(255,40,30,0.32)" on={red * (0.75 + 0.25 * Math.sin(t * 3 + i))} len={1300} />);
+    beams.push(<Beam key={`b${i}`} x={1040} y={150 + i * 230} angle={60 - i * 8 - sway} color="rgba(40,120,255,0.32)" on={blue * (0.75 + 0.25 * Math.sin(t * 3.3 + i))} len={1300} />);
   }
   // golden spots sweeping through the dark from the top
   const sweepA = interpolate(f, [F.gold, F.logo + 20], [-55, 25], {...clamp, easing: Easing.inOut(Easing.cubic)}) + Math.sin(t * 0.8) * 10 * groove;
   const sweepB = interpolate(f, [F.gold + 6, F.logo + 26], [55, -25], {...clamp, easing: Easing.inOut(Easing.cubic)}) - Math.sin(t * 0.7) * 10 * groove;
-  beams.push(<Beam key="g1" x={300} y={-40} angle={sweepA} color="rgba(255,190,80,0.38)" on={gold * (1 - 0.5 * ease(f, F.artist, F.flash))} len={2000} spread={6} />);
-  beams.push(<Beam key="g2" x={780} y={-40} angle={sweepB} color="rgba(255,190,80,0.38)" on={gold * (1 - 0.5 * ease(f, F.artist, F.flash))} len={2000} spread={6} />);
-  return <AbsoluteFill style={{pointerEvents: 'none'}}>{beams}</AbsoluteFill>;
+  beams.push(<Beam key="g1" x={300} y={-40} angle={sweepA} color="rgba(255,190,80,0.26)" on={gold * (1 - 0.7 * ease(f, F.artist, F.flash))} len={2000} spread={3.5} />);
+  beams.push(<Beam key="g2" x={780} y={-40} angle={sweepB} color="rgba(255,190,80,0.26)" on={gold * (1 - 0.7 * ease(f, F.artist, F.flash))} len={2000} spread={3.5} />);
+  return <AbsoluteFill style={{pointerEvents: 'none', opacity: 1 - 0.55 * ease(f, F.flash, F.flash + 30)}}>{beams}</AbsoluteFill>;
 };
 
 const Particles: React.FC<{n: number; seed: number; opacity: number}> = ({n, seed, opacity}) => {
@@ -280,7 +280,7 @@ export const Akai: React.FC = () => {
             ))}
           </AbsoluteFill>
         )}
-        <Fog opacity={0.32 - 0.14 * ease(f, F.artist, F.flash) - 0.12 * finalPoster} />
+        <Fog opacity={0.28 - 0.16 * ease(f, F.artist, F.flash) - 0.1 * finalPoster} />
       </AbsoluteFill>
 
       {/* ---------------- foreground (artist + typography) */}
