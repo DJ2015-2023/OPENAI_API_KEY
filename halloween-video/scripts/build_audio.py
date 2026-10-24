@@ -254,23 +254,30 @@ def main():
     place(fx, thunder(), W("s10", 7), 0.5)
     place(fx, bell(147.0, 5.0), S["end"] + 0.1, 0.55)
 
-    venv = np.abs(vo[:, 0])
-    venv = signal.filtfilt(*signal.butter(1, 3 / (SR / 2)), venv)
-    vflag = np.clip(venv * 10, 0, 1)
-    # spectral carve: pull the song's vocal range down further while the narrator speaks
-    mid = np.stack([signal.filtfilt(*signal.butter(2, [250 / (SR / 2), 4000 / (SR / 2)], "band"), mus[:, c]) for c in (0, 1)], 1)
-    mus = mus - mid * (0.6 * vflag)[:, None]
-    duck = 1 - 0.68 * vflag
+    # speech mask from the clip spans (pre-roll 0.2 s so the music is already down on the first syllable)
+    vmask = np.zeros(n, np.float32)
+    for pid, (st, _) in starts.items():
+        vmask[int((st - 0.2) * SR): int((st + len(clips[pid]) / SR + 0.25) * SR)] = 1
+    vmask = signal.filtfilt(*signal.butter(1, 4 / (SR / 2)), vmask).clip(0, 1)
+    # spectral carve: remove most of the song's vocal range while the narrator speaks
+    mid = np.stack([signal.filtfilt(*signal.butter(2, [200 / (SR / 2), 5000 / (SR / 2)], "band"), mus[:, c]) for c in (0, 1)], 1)
+    mus = mus - mid * (0.85 * vmask)[:, None]
+    duck = 1 - 0.8 * vmask  # about -14 dB under the voice (plus the carve)
     # the whispered line ("возможно, именно этой ночью...") needs extra room
     w0, w1 = int((W("s07", 9) - 0.25) * SR), int((starts["s07"][0] + len(clips["s07"]) / SR) * SR)
     ramp = np.zeros(n, np.float32)
     ramp[w0:w1] = 1
     ramp = signal.filtfilt(*signal.butter(1, 2 / (SR / 2)), ramp)
-    duck *= 1 - 0.6 * ramp
-    vo *= (1 + 0.5 * ramp)[:, None]
+    duck *= 1 - 0.5 * ramp
+    vo *= (1 + 0.4 * ramp)[:, None]
     mus *= duck[:, None]
-    mix = vo * 1.0 + mus * 0.6 + fx * 0.45
-    mix = np.tanh(mix / np.abs(mix).max() * 1.6) / np.tanh(1.6) * 0.95
+    mix = vo * 1.0 + mus * 0.45 + fx * 0.35
+    mix = np.tanh(mix / np.abs(mix).max() * 1.15) / np.tanh(1.15) * 0.95
+    # report voice-over-music ratio while speaking
+    sp = vmask > 0.9
+    rv = np.sqrt(np.mean(vo[sp] ** 2))
+    rm = np.sqrt(np.mean((mus[sp] * 0.45) ** 2))
+    print("voice/music during speech: %.1f dB" % (20 * np.log10(rv / rm)))
     fade = int(2.4 * SR)
     mix[-fade:] *= np.linspace(1, 0, fade)[:, None] ** 1.5
     wavfile.write(os.path.join(ROOT, "public/audio/mix.wav"), SR, (mix * 32767).astype(np.int16))
