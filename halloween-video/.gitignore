@@ -1,0 +1,8 @@
+node_modules
+out
+public/audio
+public/hf
+hyperframes/node_modules
+hyperframes/*/.hyperframes/
+__pycache__
+music/*.mp3
