@@ -15,16 +15,27 @@
 <body>
 <main>
   <h1>Privacy Policy</h1>
-  <p>Last updated: October 20, 2026</p>
+  <p>Last updated: October 24, 2026</p>
   <p>AI Shorts is a private tool used only by the owner of a single YouTube channel to upload videos to that channel.</p>
   <h2>What it accesses</h2>
-  <p>With the owner's permission, AI Shorts uses the YouTube Data API to upload videos to the owner's channel and to read the titles of that channel's recent uploads, so that the same story is not covered twice.</p>
+  <p>With the owner's permission, AI Shorts uses YouTube API Services only on the owner's own channel, to:</p>
+  <ul>
+    <li>upload videos the owner's tool produced (YouTube Data API, <code>youtube.upload</code>);</li>
+    <li>read the titles and descriptions of the channel's recent uploads, so the same story is not covered twice (<code>youtube.readonly</code>);</li>
+    <li>read view counts and average watch time of the channel's own videos, to choose better topics (YouTube Analytics API, <code>yt-analytics.readonly</code>);</li>
+    <li>post the channel's own question as the first comment on its own public videos (<code>youtube.force-ssl</code>).</li>
+  </ul>
+  <p>Analytics figures are read when needed and are not stored beyond the session that reads them. A local list of uploaded video IDs and titles is kept by the owner.</p>
   <h2>What it does not do</h2>
   <p>It does not collect, store, sell or share personal data of anyone. It does not access any other user's account, and it is not offered to the public.</p>
   <h2>Credentials</h2>
   <p>The access credentials are stored privately by the owner and are used only to make the requests described above. The owner can revoke access at any time at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</p>
   <h2>Google API Services</h2>
   <p>AI Shorts' use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>. It also relies on YouTube API Services; see the <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a> and the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.</p>
+  <h2>Revoking access</h2>
+  <p>The owner can revoke AI Shorts' access at any time at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a> or through <a href="https://security.google.com/settings/security/permissions">Google security settings</a>. After revocation no further data is read.</p>
+  <h2>Terms</h2>
+  <p>See the <a href="terms.html">Terms of Use</a>.</p>
   <h2>Contact</h2>
   <p><a href="mailto:latinfusionfestival@gmail.com">latinfusionfestival@gmail.com</a></p>
 </main>
