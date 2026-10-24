@@ -5,12 +5,13 @@
 //
 //   node scripts/youtube.mjs check                      verify credentials, print the channel name
 //   node scripts/youtube.mjs recent                     titles of the last 30 uploads (to avoid repeats)
-//   node scripts/youtube.mjs upload episodes/<id> --approved
+//   node scripts/youtube.mjs upload episodes/<id> --approved | --auto
 //   node scripts/youtube.mjs stats                      how the last 15 uploads performed (feeds the next picks)
 //   node scripts/youtube.mjs engage                     post each public Short's question as the first comment
 //
-// Upload refuses to run without --approved (the human said "publish") and
-// refuses to upload the same episode twice.
+// Upload needs --approved (the human said "publish") or --auto, which works only while
+// config.json has "autoPublish": true (the owner's standing approval). It refuses to
+// upload the same episode twice.
 import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -79,8 +80,9 @@ async function recent() {
 }
 
 async function upload(dir) {
-  if (!process.argv.includes('--approved')) {
-    console.error('Refusing to upload: pass --approved only after the channel owner approved this video.');
+  const auto = process.argv.includes('--auto') && JSON.parse(readFileSync(join(ROOT, 'config.json'), 'utf8')).autoPublish === true;
+  if (!process.argv.includes('--approved') && !auto) {
+    console.error('Refusing to upload: pass --approved after the channel owner approved this video, or --auto while config.json has "autoPublish": true.');
     process.exit(3);
   }
   const ep = resolve(dir);
@@ -176,7 +178,7 @@ async function engage() {
 
 const cmds = { check, recent, stats, engage, upload: () => upload(target) };
 if (!cmds[cmd]) {
-  console.error('usage: node scripts/youtube.mjs check | recent | stats | engage | upload episodes/<id> --approved');
+  console.error('usage: node scripts/youtube.mjs check | recent | stats | engage | upload episodes/<id> --approved|--auto');
   process.exit(1);
 }
 cmds[cmd]().catch((e) => {
