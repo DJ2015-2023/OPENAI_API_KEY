@@ -89,6 +89,10 @@ async function upload(dir) {
   const build = join(ep, 'build');
   const video = join(build, 'video.mp4');
   const meta = JSON.parse(readFileSync(join(build, 'youtube.json'), 'utf8'));
+  // YouTube rejects titles and descriptions containing < or >.
+  const clean = (x) => x.replace(/</g, '‹').replace(/>/g, '›');
+  meta.title = clean(meta.title);
+  meta.description = clean(meta.description);
   const done = join(build, 'upload.json');
   if (existsSync(done)) {
     console.error(`Already uploaded: ${JSON.parse(readFileSync(done, 'utf8')).url}`);
