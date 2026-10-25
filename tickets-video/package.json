@@ -1,0 +1,25 @@
+{
+  "name": "tickets-video",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render Tickets out/main.mp4"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.2.6",
+    "@fontsource/oswald": "^5.2.6",
+    "@fontsource/rubik-wet-paint": "^5.2.6",
+    "@fontsource/rubik-glitch": "^5.2.6",
+    "@fontsource/unbounded": "^5.2.6",
+    "@react-three/fiber": "^9.2.0",
+    "@remotion/cli": "4.0.537",
+    "@remotion/three": "4.0.537",
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.537",
+    "three": "0.178.0",
+    "typescript": "^7.0.2"
+  }
+}
