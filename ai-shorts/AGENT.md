@@ -142,7 +142,7 @@ depending on `config.json` (see the first hard rule). The owner speaks Spanish: 
    automatically. Send its preview and the reason, and ask "¿Lo publico igualmente?".
 
 8. **Publish.** Make a preview for the chat and for TikTok:
-   `ffmpeg -i build/video.mp4 -c:v libx264 -crf 24 -c:a copy build/preview.mp4`.
+   `ffmpeg -i build/video.mp4 -c:v libx264 -crf 26 -maxrate 6M -bufsize 12M -c:a copy build/preview.mp4`.
    For each video, tell the owner (in Spanish): the world it uses (from the build log's
    `style` line, e.g. "mundo editorial"), the story in two lines, the title, the source links,
    and the contents of `build/social.txt` (ready-to-paste captions for TikTok and Instagram
