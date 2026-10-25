@@ -56,8 +56,11 @@ depending on `config.json` (see the first hard rule). The owner speaks Spanish: 
    - **Freshness:** hours old beats a day old.
    Pick the three highest totals that also pass the sourcing rule. Confirm each with
    at least two independent sources, one of them primary when one exists. `a`, `b` and `c`
-   must be different stories (and ideally different companies). If only two stories pass
-   the sourcing rule, make two and tell the owner why. For "use it today" Shorts, kicker
+   must be different stories (and ideally different companies).
+   **Always deliver three.** Never end a run with fewer because news is thin: news may be up
+   to 72 h old if no recent upload covered it, and any slot without a strong news story gets
+   a "use it today" Short instead (there are always useful features to explain). Only if
+   even that fails the sourcing rule, make fewer and tell the owner exactly why. For "use it today" Shorts, kicker
    like "AI TIP · <APP>" and a title that promises the benefit ("Fix closed eyes in any
    photo with one tap #Shorts"); the outro question can ask whether they'd use it.
 
@@ -118,7 +121,7 @@ depending on `config.json` (see the first hard rule). The owner speaks Spanish: 
 
 7. **Quality gate.** For each finished video, check all of these:
    - every on-screen claim and number is in at least two of the episode's `sources`;
-   - the story is fresh (news under 48 h, a "use it today" feature under 14 days) and not
+   - the story is fresh (news under 72 h, a "use it today" feature under 14 days) and not
      covered by a recent upload (step 2);
    - the stills show no overflowing, cut-off or overlapping text;
    - `build/video.mp4` exists, is 1080x1920 and 25–40 s long (`ffprobe`).
