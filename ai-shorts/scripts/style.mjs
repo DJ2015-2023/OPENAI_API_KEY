@@ -57,26 +57,34 @@ export function parseStyleId(id) {
 
 /** Styles used before, most recent first. */
 export function pastStyles(exceptId) {
-  const out = [];
+  const online = [];
+  let fetched = false;
   try {
     const raw = execFileSync('node', [join(ROOT, 'scripts/youtube.mjs'), 'recent', '--json'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
     for (const v of JSON.parse(raw)) {
       const m = /Style ID: (\S+)/.exec(v.description ?? '');
       const st = m && parseStyleId(m[1]);
-      if (st) out.push(st);
+      if (st) online.push(st);
     }
+    fetched = true;
   } catch {
     // no credentials or no network: fall back to local episodes only
   }
+  // Local episodes not uploaded yet (e.g. today's other Shorts) are the newest of all, so
+  // they go first; uploaded ones are already in the channel list.
+  const local = [];
+  const recentDay = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
   const dir = join(ROOT, 'episodes');
-  const local = existsSync(dir) ? readdirSync(dir).filter((d) => d !== exceptId).sort().reverse() : [];
-  for (const d of local) {
+  const names = existsSync(dir) ? readdirSync(dir).filter((d) => d !== exceptId).sort().reverse() : [];
+  for (const d of names) {
     const f = join(dir, d, 'episode.json');
     if (!existsSync(f)) continue;
+    // With the channel list in hand, only add today's and yesterday's unpublished episodes.
+    if (fetched && (!/^\d{4}-\d{2}-\d{2}/.test(d) || d < recentDay || existsSync(join(dir, d, 'build', 'upload.json')))) continue;
     const ep = JSON.parse(readFileSync(f, 'utf8'));
-    if (ep.style && ep.scenes) out.push({ ...ep.style, align: ep.style.layout, layout: layoutOf(ep.scenes) });
+    if (ep.style && ep.scenes) local.push({ ...ep.style, align: ep.style.layout, layout: layoutOf(ep.scenes) });
   }
-  return out;
+  return [...local, ...online];
 }
 
 const hueDist = (a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
