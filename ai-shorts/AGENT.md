@@ -125,6 +125,16 @@ depending on `config.json` (see the first hard rule). The owner speaks Spanish: 
      covered by a recent upload (step 2);
    - the stills show no overflowing, cut-off or overlapping text;
    - `build/video.mp4` exists, is 1080x1920 and 25–40 s long (`ffprobe`).
+   - **Virality check** (fix episode.json and rebuild if any fails):
+     - the first phrase is a real hook (a surprising claim, a big number, a direct question
+       or a "you can do this now" promise), spoken at 0.25 s, never a greeting;
+     - 25–35 s spoken; nothing in the middle that drags (each scene earns its place);
+     - the title is under 60 characters plus ` #Shorts`, leads with the name, number or
+       benefit that makes people tap, and the video backs up every word of it;
+     - the outro ends on a question that invites an opinion, plus "Tell me in the comments";
+     - the story leans toward what worked best in `stats` (step 2), and you can say why in
+       one line;
+     - 5–8 specific tags and ready-to-paste TikTok captions in `build/social.txt`.
    Run `node scripts/youtube.mjs check` first; if the secrets are missing, upload nothing, say
    so and point the owner to `ai-shorts/SETUP.md` step 5.
    If a check fails: fix and rebuild if it's quick; otherwise it is not uploaded
