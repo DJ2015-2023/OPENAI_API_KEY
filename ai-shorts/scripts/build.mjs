@@ -4,6 +4,7 @@
 //   node scripts/build.mjs episodes/<id> [--no-render] [--stills]
 //
 // Reads episodes/<id>/episode.json and writes everything to episodes/<id>/build/.
+import { cpus } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -348,7 +349,7 @@ if (STILLS) {
 if (!NO_RENDER) {
   log('rendering 1080x1920 (takes a while)…');
   const t0 = Date.now();
-  remotion('render', [join(buildDir, 'video.mp4'), '--concurrency=4', '--audio-codec=aac', '--audio-bitrate=256k']);
+  remotion('render', [join(buildDir, 'video.mp4'), `--concurrency=${Math.max(1, cpus().length)}`, '--audio-codec=aac', '--audio-bitrate=256k']);
   remotion('still', [join(buildDir, 'thumb.jpg'), `--frame=${Math.round((scenes[0].cues[1] ?? scenes[0].cues[0]) * FPS + 25)}`]);
   log(`done in ${((Date.now() - t0) / 60000).toFixed(1)} min → ${relative(ROOT, join(buildDir, 'video.mp4'))}`);
 }

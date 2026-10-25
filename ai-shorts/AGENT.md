@@ -114,7 +114,8 @@ depending on `config.json` (see the first hard rule). The owner speaks Spanish: 
    one's style and layout are checked against the ones before it.
 
 6. **Render** all three, one after the other: `node scripts/build.mjs episodes/<id>`
-   (about 10–15 min each). Run it in the background with a command that **exits when the
+   (10 min to over an hour each, depending on the machine: keep going until all three are
+   published, however long it takes). Run it in the background with a command that **exits when the
    render ends** (e.g. `node scripts/build.mjs episodes/<id> > build.log 2>&1`), so you're woken
    when it finishes; don't wait with sleep loops. Check and publish each video as soon as it is done (steps 7–8) instead of waiting for all three. Output per episode:
    `build/video.mp4`, `build/thumb.jpg`, `build/youtube.json`.
