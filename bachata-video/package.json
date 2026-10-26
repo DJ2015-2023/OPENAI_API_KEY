@@ -1,0 +1,20 @@
+{
+  "name": "bachata-video",
+  "private": true,
+  "scripts": {
+    "render": "remotion render Bachata out/main.mp4"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.2.6",
+    "@fontsource/great-vibes": "^5.2.6",
+    "@fontsource/montserrat": "^5.2.6",
+    "@fontsource/marck-script": "^5.2.6",
+    "@remotion/cli": "4.0.537",
+    "@remotion/media-utils": "4.0.537",
+    "@types/react": "^19.3.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.537",
+    "typescript": "^7.0.2"
+  }
+}

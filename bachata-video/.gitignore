@@ -1,0 +1,10 @@
+node_modules
+out
+public/audio
+public/clips
+public/hf
+source/raw
+music/*.mp3
+hyperframes/node_modules
+hyperframes/*/.hyperframes/
+__pycache__
