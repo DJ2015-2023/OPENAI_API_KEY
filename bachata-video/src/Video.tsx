@@ -2,17 +2,18 @@ import React from 'react';
 import {AbsoluteFill, Audio, Composition, Sequence, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {FontGate, Grain, LightLeak, Vignette} from './components/FX';
 import {Footage, sectionStarts} from './components/Footage';
-import {Cta, Expect, Intro, NotJust, Outro, PriceSection, Schedule, Song, Tagline, Why} from './Sections';
+import {Cta, Expect, Intro, NotJust, Outro, PriceSection, Schedule, Shoot, Song, Tagline, Why} from './Sections';
 import {FPS, H, SectionKey, T, W, clamp, pulse} from './theme';
 
 const OVERLAYS: [SectionKey, React.FC][] = [
+  ['shoot', Shoot],
+  ['song', Song],
+  ['schedule', Schedule],
+  ['price', PriceSection],
   ['intro', Intro],
   ['tagline', Tagline],
   ['notjust', NotJust],
   ['expect', Expect],
-  ['song', Song],
-  ['schedule', Schedule],
-  ['price', PriceSection],
   ['why', Why],
   ['cta', Cta],
   ['outro', Outro],

@@ -27,7 +27,7 @@ export const roseGold: React.CSSProperties = {
   color: 'transparent',
 };
 
-export type SectionKey = 'intro' | 'tagline' | 'notjust' | 'expect' | 'song' | 'schedule' | 'price' | 'why' | 'cta' | 'outro';
+export type SectionKey = 'shoot' | 'intro' | 'tagline' | 'notjust' | 'expect' | 'song' | 'schedule' | 'price' | 'why' | 'cta' | 'outro';
 export type Segment = {clip: string; src: number; from: number; dur: number; section: SectionKey};
 export const T = timing as unknown as {
   fps: number;

@@ -36,7 +36,6 @@ export const Intro: React.FC = () => {
   const b = (i: number) => bf('intro', i);
   return (
     <AbsoluteFill>
-      <AbsoluteFill style={{background: '#000', opacity: 1 - ease(f, 0, 10)}} />
       <Bottom bottom={330}>
         <Lockup at={b(4) - 4} />
         <Rule at={b(8) - 2} width={560} style={{marginTop: 26}} />
@@ -98,12 +97,11 @@ export const NotJust: React.FC = () => {
 };
 
 /* ================================================================ WHAT TO EXPECT */
-const ITEMS: {icon: 'clock' | 'dancer' | 'wave' | 'heart' | 'camera'; big: string; sub: string}[] = [
+const ITEMS: {icon: 'clock' | 'dancer' | 'wave' | 'heart'; big: string; sub: string}[] = [
   {icon: 'clock', big: '6 часов', sub: 'интенсивных занятий и работы над хореографией'},
   {icon: 'dancer', big: 'Женственная постановка', sub: 'красивая и выразительная — в стиле Bachata Lady Style'},
   {icon: 'wave', big: 'Пластика и музыкальность', sub: 'техника движений и уверенность в танце'},
   {icon: 'heart', big: 'Эмоции и подача', sub: 'особое внимание индивидуальности каждой участницы'},
-  {icon: 'camera', big: 'Видеосъёмка', sub: 'сохрани результат в красивом танцевальном видео'},
 ];
 const Viewfinder: React.FC<{on: number}> = ({on}) => {
   const f = useCurrentFrame();
@@ -146,12 +144,11 @@ export const Expect: React.FC = () => {
         const ip = ease(f, at + 4, at + 18);
         return (
           <React.Fragment key={i}>
-            {it.icon === 'camera' && <Viewfinder on={ease(f, at, at + 8) * (1 - ease(f, out - 6, out))} />}
-            <Block at={at} out={i < 4 ? out : 1e9} style={{left: 60, right: 60, bottom: 240}}>
+            <Block at={at} out={i < ITEMS.length - 1 ? out : 1e9} style={{left: 60, right: 60, bottom: 240}}>
               <Glass style={{padding: '40px 46px 44px'}} glow={0.3 + 0.4 * pulse(f + T.sections.expect.from)}>
                 <div style={{display: 'flex', alignItems: 'center', gap: 26}}>
                   <Icon name={it.icon} size={96} p={ip} />
-                  <div style={{fontFamily: SANS, fontWeight: 300, fontSize: 30, color: C.rose, letterSpacing: '0.2em'}}>0{i + 1} / 05</div>
+                  <div style={{fontFamily: SANS, fontWeight: 300, fontSize: 30, color: C.rose, letterSpacing: '0.2em'}}>0{i + 1} / 04</div>
                 </div>
                 <div style={{...sans(it.big.length > 12 ? 70 : 104, 800), ...roseGold, marginTop: 18, textTransform: 'none'}}>{it.big}</div>
                 <div style={{fontFamily: SANS, fontWeight: 500, fontSize: 40, lineHeight: 1.3, color: C.ivory, marginTop: 14}}>{it.sub}</div>
@@ -165,6 +162,31 @@ export const Expect: React.FC = () => {
           </React.Fragment>
         );
       })}
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================ SHOOT (opening) */
+export const Shoot: React.FC = () => {
+  const f = useCurrentFrame();
+  const b = (i: number) => bf('shoot', i);
+  return (
+    <AbsoluteFill>
+      <AbsoluteFill style={{background: '#000', opacity: 1 - ease(f, 0, 8)}} />
+      <Viewfinder on={ease(f, 2, 10)} />
+      <Block at={4} style={{left: 0, right: 0, top: 270, textAlign: 'center'}}>
+        <Eyebrow>Bachata Lady Style · хореокурс</Eyebrow>
+      </Block>
+      <Bottom bottom={260}>
+        <Block at={b(1)} style={{position: 'relative', display: 'flex', alignItems: 'center', gap: 22}}>
+          <Icon name="camera" size={90} p={ease(f, b(1), b(1) + 14)} />
+          <div style={{...sans(118, 800), ...roseGold, textTransform: 'none'}}>Видеосъёмка</div>
+        </Block>
+        <Words text="Возможность принять участие в видеосъёмке" at={b(3)} style={{...serifItalic(66), marginTop: 18}} />
+        <Words text="и сохранить результат своей работы" at={b(6)} style={{...serifItalic(58, {color: C.rose}), marginTop: 10}} />
+        <Script text="в красивом танцевальном видео!" at={b(8)} size={92} rotate={-3} style={{marginTop: 6}} />
+      </Bottom>
+      <Glint x={880} y={1250} size={110} p={ease(f, b(2), b(4))} />
     </AbsoluteFill>
   );
 };

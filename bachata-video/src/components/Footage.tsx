@@ -5,12 +5,13 @@ import {FPS, Segment, T, W, clamp} from '../theme';
 type Trans = 'cut' | 'whip' | 'zoom' | 'leak';
 /** Transition used when a section begins (cuts inside a section are hard beat cuts with a punch-in). */
 const SECTION_IN: Record<string, Trans> = {
-  tagline: 'whip',
-  notjust: 'zoom',
-  expect: 'leak',
   song: 'zoom',
   schedule: 'whip',
   price: 'leak',
+  intro: 'zoom',
+  tagline: 'whip',
+  notjust: 'zoom',
+  expect: 'leak',
   why: 'whip',
   cta: 'zoom',
   outro: 'leak',
@@ -83,4 +84,4 @@ export const Footage: React.FC = () => {
 };
 
 /** Frames at which a section starts (for the light-leak bursts in Video.tsx). */
-export const sectionStarts = () => Object.entries(T.sections).filter(([k]) => k !== 'intro').map(([k, v]) => ({key: k, at: v.from, kind: SECTION_IN[k]}));
+export const sectionStarts = () => Object.entries(T.sections).filter(([k]) => k !== 'shoot').map(([k, v]) => ({key: k, at: v.from, kind: SECTION_IN[k]}));

@@ -23,22 +23,52 @@ SR = 48000
 FPS = 30
 SONG_OFFSET = 1.85  # song time at video t=0 (first beat lands at ~0.31 s)
 
-# section -> bars
-SECTIONS = [("intro", 3), ("tagline", 3), ("notjust", 3), ("expect", 12), ("song", 2), ("schedule", 5), ("price", 3), ("why", 3), ("cta", 3), ("outro", 3)]
-# section -> list of (clip, source start s, beats)
+# section -> bars. The video opens with the practical info (shoot, song, schedule, prices),
+# then the brand intro and the rest of the copy.
+SECTIONS = [("shoot", 3), ("song", 2), ("schedule", 5), ("price", 3), ("intro", 3), ("tagline", 3), ("notjust", 3), ("expect", 10), ("why", 3), ("cta", 3), ("outro", 3)]
+# section -> list of (clip, preferred source start s or None = first free stretch, beats).
+# allocate() guarantees no stretch of any source clip is used twice.
 EDL = {
-    "intro": [("A", 1.6, 2), ("B", 1.5, 2), ("G", 3.0, 2), ("E", 0.4, 2), ("M", 2.0, 2), ("D", 0.0, 2)],
-    "tagline": [("K", 1.0, 4), ("G", 6.0, 4), ("M", 10.0, 4)],
-    "notjust": [("D", 3.0, 4), ("H", 2.0, 4), ("A", 4.0, 4)],
-    "expect": [("I", 5.0, 4), ("J", 2.0, 4), ("F", 2.0, 4), ("F", 10.0, 4), ("B", 3.2, 4), ("K", 4.5, 4), ("G", 8.0, 4), ("I", 12.0, 4),
-               ("M", 14.0, 4), ("E", 2.0, 4), ("L", 0.5, 4), ("D", 5.6, 4)],
+    "shoot": [("L", 0.0, 4), ("D", 5.6, 4), ("M", 0.5, 4)],
     "song": [("M", 20.0, 8)],
-    "schedule": [("H", 5.0, 8), ("J", 8.0, 4), ("M", 28.0, 8)],
+    "schedule": [("H", 5.0, 8), ("J", 8.0, 4), ("I", 20.0, 8)],
     "price": [("G", 0.2, 4), ("K", 5.2, 4), ("A", 5.0, 4)],
+    "intro": [("A", 1.6, 2), ("B", 1.5, 2), ("G", 3.0, 2), ("E", 0.4, 2), ("M", 2.7, 2), ("D", 0.0, 2)],
+    "tagline": [("K", 1.0, 4), ("G", 6.0, 4), ("F", 18.0, 4)],
+    "notjust": [("D", 9.0, 4), ("H", 0.2, 4), ("C", 0.2, 4)],
+    "expect": [("I", 5.0, 4), ("J", 2.0, 4), ("F", 2.0, 4), ("F", 10.0, 4), ("B", 3.2, 4), ("C", 2.5, 4), ("I", 12.0, 4), ("G", 8.4, 4),
+               ("M", 14.0, 4), ("E", 2.0, 4)],
     "why": [("I", 28.0, 4), ("D", 12.0, 4), ("M", 34.0, 4)],
-    "cta": [("F", 6.0, 4), ("B", 0.2, 4), ("D", 18.0, 4)],
-    "outro": [("M", 38.0, 12)],
+    "cta": [("F", 6.0, 4), ("J", 10.3, 4), ("D", 18.0, 4)],
+    "outro": [("M", 36.6, 12)],
 }
+CLIP_LEN = {"A": 7.53, "B": 7.33, "C": 4.73, "D": 27.23, "E": 4.73, "F": 22.43, "G": 13.73, "H": 11.37, "I": 37.77, "J": 13.6, "K": 9.17, "L": 4.3, "M": 46.0}
+
+
+def allocate(segments):
+    """Give every segment a source range; fail loudly if any two ranges of the same clip overlap."""
+    used = {k: [] for k in CLIP_LEN}
+    pad = 0.12
+    for s in segments:
+        if s["src"] is not None:
+            used[s["clip"]].append((s["src"], s["src"] + s["dur"] / FPS))
+    for s in segments:
+        if s["src"] is None:
+            d = s["dur"] / FPS
+            t = 0.0
+            for a, b in sorted(used[s["clip"]]):
+                if t + d + pad <= a:
+                    break
+                t = max(t, b + pad)
+            s["src"] = round(t, 3)
+            used[s["clip"]].append((t, t + d))
+    for k, iv in used.items():
+        iv.sort()
+        for (a1, b1), (a2, b2) in zip(iv, iv[1:]):
+            assert a2 >= b1 - 1e-6, f"clip {k}: {a1:.2f}-{b1:.2f} overlaps {a2:.2f}-{b2:.2f}"
+        if iv:
+            assert iv[-1][1] <= CLIP_LEN[k] + 1e-6, f"clip {k} runs past its end: {iv[-1]}"
+    return used
 
 
 def song():
@@ -80,18 +110,20 @@ def main():
     for name, bars in SECTIONS:
         start_b = b
         for clip, src, nb in EDL[name]:
-            segments.append({"clip": clip, "src": round(src, 3), "from": fr(grid(b)), "dur": fr(grid(b + nb)) - fr(grid(b)), "section": name})
+            segments.append({"clip": clip, "src": None if src is None else round(src, 3), "from": fr(grid(b)), "dur": fr(grid(b + nb)) - fr(grid(b)), "section": name})
             b += nb
         assert b - start_b == bars * 4, (name, b - start_b, bars * 4)
         sections[name] = {"from": fr(grid(start_b)), "dur": fr(grid(b)) - fr(grid(start_b)), "beat0": start_b}
     # the very first segment starts at frame 0 (fade in from black covers the pickup)
     segments[0]["dur"] += segments[0]["from"]
     segments[0]["from"] = 0
-    sections["intro"]["dur"] += sections["intro"]["from"]
-    sections["intro"]["from"] = 0
+    sections["shoot"]["dur"] += sections["shoot"]["from"]
+    sections["shoot"]["from"] = 0
     end_t = grid(b) + 2.0
     total = fr(end_t)
     segments[-1]["dur"] = total - segments[-1]["from"]
+    used = allocate(segments)
+    print("source use (s):", {k: round(sum(b - a for a, b in v), 1) for k, v in used.items()})
     timing = {"fps": FPS, "total": total, "beat": period * FPS, "phase": phase * FPS, "beats": [fr(t) for t in bt if t < end_t], "sections": sections, "segments": segments}
     json.dump(timing, open(os.path.join(ROOT, "src/timing.json"), "w"), indent=1)
 
@@ -103,20 +135,21 @@ def main():
     fx = np.zeros((N, 2), np.float32)
     S = {k: v["from"] / FPS for k, v in sections.items()}
     B = lambda name, beat: grid(sections[name]["beat0"] + beat)
-    put(fx, sfx("riser/fs-464250-echo-chromatic-riser-wav.ogg"), 0.0, 0.25)
-    put(fx, sfx("impact/fs-177242-cinematic-impact.ogg"), B("intro", 4), 0.45)
-    put(fx, sfx(f"{SFX2}/light/sparkle.mp3") if os.path.exists(f"{SFX2}/light/sparkle.mp3") else sfx("ding/fs-349504-triangle-open-04.ogg"), B("intro", 6), 0.35)
-    for name in ("tagline", "notjust", "expect", "song", "schedule", "price", "why", "cta", "outro"):
-        put(fx, sfx("whoosh/fs-169867-swoosh.ogg"), S[name] - 0.18, 0.4, pan=0.2)
-    for i in range(5):  # list items
-        put(fx, sfx("pop/fs-824189-pop-in-sfx.ogg"), B("expect", 8 + i * 8), 0.35)
-    put(fx, sfx(f"{SFX2}/camera/camera-shutter-hard.mp3"), B("expect", 40) + 0.3, 0.4)
+    put(fx, sfx(f"{SFX2}/camera/camera-shutter-hard.mp3"), 0.3, 0.45)  # opens on the video shoot
+    put(fx, sfx(f"{SFX2}/camera/camera-autofocus.mp3"), B("shoot", 2), 0.3)
     put(fx, sfx("ui-blip/kenney-digital-threetone1.ogg"), S["song"] + 0.2, 0.3)
     for i in range(4):  # schedule cards
         put(fx, sfx("click/kenney-interface-select-001.ogg"), B("schedule", 2 + i * 4), 0.4)
     put(fx, sfx(f"{SFX2}/camera/camera-lens-shutter.mp3"), B("schedule", 14), 0.35)
     for i in range(2):  # prices
         put(fx, sfx("ding/kenney-interface-confirmation-001.ogg"), B("price", 2 + i * 5), 0.35)
+    put(fx, sfx("riser/fs-464250-echo-chromatic-riser-wav.ogg"), S["intro"] - 1.6, 0.22)
+    put(fx, sfx("impact/fs-177242-cinematic-impact.ogg"), B("intro", 4), 0.45)
+    put(fx, sfx("ding/fs-349504-triangle-open-04.ogg"), B("intro", 6), 0.3)
+    for name in ("song", "schedule", "price", "intro", "tagline", "notjust", "expect", "why", "cta", "outro"):
+        put(fx, sfx("whoosh/fs-169867-swoosh.ogg"), S[name] - 0.18, 0.4, pan=0.2)
+    for i in range(4):  # list items
+        put(fx, sfx("pop/fs-824189-pop-in-sfx.ogg"), B("expect", 8 + i * 8), 0.35)
     put(fx, sfx("impact/fs-222517-dramatic-hit.ogg"), S["cta"], 0.35)
     put(fx, sfx("typing/fs-416777-digital-typing-wav.ogg")[: int(1.2 * SR)], B("cta", 5), 0.3)
     put(fx, sfx("pop/fs-467951-ui-button-click.ogg"), B("cta", 8), 0.4)

@@ -43,8 +43,8 @@
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="10.167" data-width="1080" data-height="1920">
-      <div id="scene" class="clip" data-start="0" data-duration="10.167" data-track-index="0">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="10.233" data-width="1080" data-height="1920">
+      <div id="scene" class="clip" data-start="0" data-duration="10.233" data-track-index="0">
         <div class="head" id="head">
           <div class="eyebrow" id="eb">РАСПИСАНИЕ КУРСА</div>
           <div class="script" id="sc">ноябрь</div>
@@ -75,7 +75,7 @@
       </div>
     </div>
     <script>
-      const B = [0.0, 0.533, 0.967, 1.433, 1.867, 2.367, 2.9, 3.433, 3.933, 4.467, 5.0, 5.5, 6.033, 6.567, 7.067, 7.567, 8.1, 8.633, 9.167, 9.667];
+      const B = [0.0, 0.5, 1.0, 1.533, 2.067, 2.6, 3.133, 3.633, 4.133, 4.667, 5.233, 5.733, 6.267, 6.733, 7.267, 7.767, 8.333, 8.833, 9.3, 9.767];
       const tl = gsap.timeline({ paused: true });
       tl.fromTo('#eb', { opacity: 0, y: -30, scaleX: 1.3 }, { opacity: 1, y: 0, scaleX: 1, duration: 0.6, ease: 'power3.out' }, 0.05);
       tl.fromTo('#sc', { opacity: 0, clipPath: 'inset(-20% 100% -20% -5%)' }, { opacity: 1, clipPath: 'inset(-20% 0% -20% -5%)', duration: 0.8, ease: 'sine.inOut' }, B[1]);
@@ -90,7 +90,7 @@
       for (let k = 15; k < 20; k++) {
         tl.fromTo('#c3', { scale: 1.035 }, { scale: 1, duration: 0.4, ease: 'power2.out', immediateRender: false }, B[k]);
       }
-      tl.to('#scene', { opacity: 0, y: -40, duration: 0.25, ease: 'power2.in' }, 10.167 - 0.3);
+      tl.to('#scene', { opacity: 0, y: -40, duration: 0.25, ease: 'power2.in' }, 10.233 - 0.3);
       window.__timelines = window.__timelines || {};
       window.__timelines['main'] = tl;
       tl.seek(0);
