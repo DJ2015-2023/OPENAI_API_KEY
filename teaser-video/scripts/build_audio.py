@@ -22,12 +22,20 @@ FPS = 24
 BPM = 128
 B = 60 / BPM
 BAR = 4 * B
-DROP = 13.4
-PHASE = DROP - 7 * BAR  # bars line up so the drop is a downbeat
-TOTAL = 20.6
-VO = {"v1": 0.35, "v2": 3.3, "v3": 6.25, "v4": 9.0, "v5": 13.55, "v6": 16.95}
-SCENES = [("mirror", 0.0, 3.0), ("lipstick", 3.0, 6.0), ("friends", 6.0, 9.0), ("phone", 9.0, DROP), ("party", DROP, 16.75), ("poster", 16.75, TOTAL)]
-PAUSE = (9.55, 10.5)  # music drops out under «А ты…»
+INTRO = 6.8  # the user's LATIN FUSION logo animation opens the video
+DROP = INTRO + 13.4
+TOTAL = INTRO + 22.2
+VO = {k: INTRO + v for k, v in {"v1": 0.35, "v2": 3.3, "v3": 6.25, "v4": 9.0, "v5": 13.55, "v6": 16.95}.items()}
+SCENES = [("intro", 0.0, INTRO)] + [(k, INTRO + a, INTRO + b) for k, a, b in [("mirror", 0.0, 3.0), ("lipstick", 3.0, 6.0), ("friends", 6.0, 9.0), ("phone", 9.0, 13.4), ("party", 13.4, 16.75), ("poster", 16.75, 22.2)]]
+PAUSE = (INTRO + 9.55, INTRO + 10.5)  # music drops out under «А ты…»
+# The user's track: "Montagem Coral" phonk (slowed + reverb). Its drop hits at 31.72 s; we line it up with ours.
+SONG = "/root/.claude/uploads/a159dcea-d751-5472-b97a-718a775da2cc/6928d9ae-MONTAGEM_CORAL_PHONK_Slowed__Reverb.mp3"
+SONG_DROP = 31.72
+SONG_BEAT = 0.438
+INTRO_CLIP = "/root/.claude/uploads/a159dcea-d751-5472-b97a-718a775da2cc/3bad9304-IMG_0767.MP4"
+INTRO_SRC, INTRO_SPEED = 1.4, 1.25
+B = SONG_BEAT
+PHASE = DROP
 rng = np.random.default_rng(31)
 N = int(TOTAL * SR)
 
@@ -139,36 +147,33 @@ def load(pid):
 PROG = [(45, [57, 60, 64], [69, 72, 76, 72]), (41, [57, 60, 65], [69, 72, 77, 72]), (43, [55, 59, 62], [67, 71, 74, 71]), (40, [56, 59, 64], [68, 71, 76, 71])]
 
 
+def decode(path, start=0.0, dur=None, speed=1.0):
+    cmd = ["ffmpeg", "-nostdin", "-loglevel", "error", "-ss", str(start)] + (["-t", str(dur * speed)] if dur else []) + ["-i", path]
+    if speed != 1.0:
+        cmd += ["-af", f"atempo={speed}"]
+    raw = subprocess.run(cmd + ["-f", "f32le", "-ac", "2", "-ar", str(SR), "-"], capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.float32).reshape(-1, 2).copy()
+
+
 def music():
     out = np.zeros((N, 2), np.float32)
-    bar0 = int(np.floor(-PHASE / BAR))
-    for b in range(bar0, int(TOTAL / BAR) + 2):
-        t0 = PHASE + b * BAR
-        root, ch, arp = PROG[b % 4]
-        drop = t0 >= DROP - 0.01
-        put(out, pad(ch, BAR + 0.4), t0, 1.0 if not drop else 0.7)
-        for s in range(8):  # requinto arpeggio in 8ths
-            tt = t0 + s * B / 2
-            put(out, pluck(arp[s % 4] + (12 if drop and s % 4 == 3 else 0), 0.7, 0.45 if not drop else 0.7), tt, 0.32, pan=0.25)
-        if t0 >= 6.0 - 0.01:  # güira enters with the friends
-            for s in range(8):
-                put(out, guira(s % 2 == 0), t0 + s * B / 2, 0.8 if not drop else 1.0, pan=0.35)
-        if drop:
-            for k in range(4):
-                put(out, kick(), t0 + k * B, 0.8)
-                put(out, bongo(True), t0 + k * B + B / 2, 0.5, pan=-0.3)
-            put(out, bongo(False), t0 + 3.75 * B, 0.5, pan=-0.3)
-            put(out, snap(), t0 + B, 0.6)
-            put(out, snap(), t0 + 3 * B, 0.6)
-            for pos, iv in ((0, 0), (1.5, 0), (2, 7), (3.5, 5)):  # syncopated bachata bass on an 808
-                put(out, b808(root - 12 + iv, B * 1.4), t0 + pos * B, 0.75)
-    # dead stop under «А ты…», then rebuild
+    x = decode(SONG, SONG_DROP - DROP, TOTAL)[:N]
+    out[: len(x)] = x
+    fade = int(1.2 * SR)
+    out[:fade] *= np.linspace(0, 1, fade)[:, None] ** 2
+    # dead stop under «А ты…», then rebuild into the drop
     env = np.ones(N, np.float32)
     a, b_ = int(PAUSE[0] * SR), int(PAUSE[1] * SR)
     env[a:b_] = 0.0
+    env[b_:int(DROP * SR)] = np.linspace(0.25, 0.8, int(DROP * SR) - b_)
     env = signal.filtfilt(*signal.butter(1, 30 / (SR / 2)), env)
     out *= np.clip(env, 0, 1)[:, None]
-    put(out, riser(DROP - PAUSE[1]), PAUSE[1], 0.35)
+    out /= np.abs(out).max() + 1e-9
+    # the logo animation's own whooshes and shimmer ride on top of the intro
+    lg = decode(INTRO_CLIP, INTRO_SRC, INTRO, INTRO_SPEED)[: int(INTRO * SR)]
+    lg[-int(0.4 * SR):] *= np.linspace(1, 0, int(0.4 * SR))[:, None]
+    out[: len(lg)] += lg / (np.abs(lg).max() + 1e-9) * 0.6
+    put(out, riser(DROP - PAUSE[1]), PAUSE[1], 0.3)
     return out
 
 
@@ -187,6 +192,7 @@ def main():
         "total": fr(TOTAL),
         "drop": fr(DROP),
         "beat": B * FPS,
+        "intro": {"src": INTRO_SRC, "speed": INTRO_SPEED},
         "phase": PHASE * FPS,
         "pause": [fr(PAUSE[0]), fr(PAUSE[1])],
         "scenes": {k: {"from": fr(a), "dur": fr(b) - fr(a)} for k, a, b in SCENES},
@@ -198,6 +204,7 @@ def main():
     mus = music()
     fx = np.zeros((N, 2), np.float32)
     S = {k: a for k, a, _ in SCENES}
+    put(fx, sfx("transition/fs-702773-swipe-wav.ogg"), S["mirror"] - 0.25, 0.5)
     put(fx, sfx("whoosh/fs-169867-swoosh.ogg"), S["lipstick"] - 0.2, 0.5, pan=0.3)
     put(fx, sfx("whoosh/fs-683101-quick-woosh.ogg"), S["friends"] - 0.2, 0.5, pan=-0.3)
     put(fx, sfx("transition/fs-702773-swipe-wav.ogg"), S["phone"] - 0.2, 0.5)
@@ -213,7 +220,7 @@ def main():
     mid = np.stack([signal.filtfilt(*signal.butter(2, [200 / (SR / 2), 5000 / (SR / 2)], "band"), mus[:, c]) for c in (0, 1)], 1)
     mus = mus - mid * (0.65 * vmask)[:, None]
     mus *= (1 - 0.55 * vmask)[:, None]
-    mix = vo * 1.0 + mus * 0.6 + fx * 0.4
+    mix = vo * 1.0 + mus * 0.55 + fx * 0.4
     mix = np.tanh(mix / np.abs(mix).max() * 1.2) / np.tanh(1.2) * 0.95
     mix[-int(0.8 * SR):] *= np.linspace(1, 0, int(0.8 * SR))[:, None]
     os.makedirs(os.path.join(ROOT, "public/audio"), exist_ok=True)
