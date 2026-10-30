@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="./gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Russo One"; src: url("./fonts/RussoOne-Regular.ttf"); }
+      @font-face { font-family: "Oswald"; src: url("./fonts/Oswald[wght].ttf"); font-weight: 200 700; }
+      :root {
+        --ground: #04060c;
+        --phone: #9fd4ff;
+        --blood: #e0102a;
+        --gold: #e9c27a;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--ground); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+      .layer { position: absolute; inset: 0; }
+      #room {
+        background:
+          radial-gradient(60% 35% at 50% 47%, rgba(80,140,220,.28), transparent 70%),
+          radial-gradient(40% 25% at 78% 18%, rgba(224,16,42,.18), transparent 70%),
+          linear-gradient(#060a16, #02030a 70%);
+      }
+      /* window with city bokeh behind him */
+      #window {
+        position: absolute; left: 140px; top: 260px; width: 800px; height: 900px;
+        border: 14px solid #0b1020; border-radius: 6px;
+        background: linear-gradient(#0a1430, #050913);
+        overflow: hidden; box-shadow: inset 0 0 120px #000;
+      }
+      #window::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 14px; background: #0b1020; }
+      .bokeh { position: absolute; border-radius: 50%; filter: blur(6px); }
+      #man { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+      #question {
+        position: absolute; left: 0; right: 0; top: 250px; text-align: center;
+        font-family: "Russo One", sans-serif; font-size: 250px; line-height: 1;
+        color: #fff; letter-spacing: 6px;
+        text-shadow: 0 0 30px rgba(224,16,42,.9), 0 0 90px rgba(224,16,42,.7), 0 12px 0 #5a0010;
+        opacity: 0;
+      }
+      #question .q { color: var(--blood); text-shadow: 0 0 40px rgba(255,40,60,.9); }
+      #ghost1, #ghost2 {
+        position: absolute; left: 0; right: 0; top: 250px; text-align: center;
+        font-family: "Russo One", sans-serif; font-size: 250px; line-height: 1; letter-spacing: 6px;
+        opacity: 0; mix-blend-mode: screen;
+      }
+      #ghost1 { color: #00e5ff; }
+      #ghost2 { color: #ff1744; }
+      #flash { background: #fff; opacity: 0; }
+      #vignette { background: radial-gradient(75% 60% at 50% 50%, transparent 40%, rgba(0,0,0,.85)); }
+      #grain { opacity: .07; background-image: repeating-radial-gradient(circle at 17% 32%, #fff 0 1px, transparent 1px 3px); }
+      #notif {
+        position: absolute; left: 270px; top: 600px; width: 540px; padding: 22px 28px;
+        border-radius: 28px; background: rgba(20,28,48,.85); border: 1px solid rgba(160,200,255,.25);
+        font-family: "Oswald", sans-serif; color: #dfe9ff; font-size: 34px; letter-spacing: .5px;
+        box-shadow: 0 0 40px rgba(80,140,220,.35); opacity: 0;
+      }
+      #notif b { color: var(--gold); font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="3.4" data-width="1080" data-height="1920">
+      <div id="cam" class="layer clip" data-start="0" data-duration="3.4">
+        <div id="room" class="layer"></div>
+        <div id="window">
+          <div class="bokeh" style="left:60px;top:520px;width:70px;height:70px;background:#ff7a2a88"></div>
+          <div class="bokeh" style="left:220px;top:600px;width:40px;height:40px;background:#ffd27a77"></div>
+          <div class="bokeh" style="left:520px;top:480px;width:90px;height:90px;background:#e0102a77"></div>
+          <div class="bokeh" style="left:640px;top:650px;width:50px;height:50px;background:#7ab8ff77"></div>
+          <div class="bokeh" style="left:330px;top:700px;width:60px;height:60px;background:#ff9f4077"></div>
+          <div class="bokeh" style="left:450px;top:380px;width:36px;height:36px;background:#fff2"></div>
+        </div>
+        <svg id="man" viewBox="0 0 1080 1920">
+          <defs>
+            <radialGradient id="faceGlow" cx="50%" cy="85%" r="70%">
+              <stop offset="0" stop-color="#bfe3ff" stop-opacity=".95" />
+              <stop offset=".45" stop-color="#3f6c9c" stop-opacity=".9" />
+              <stop offset="1" stop-color="#0a0f1c" />
+            </radialGradient>
+            <radialGradient id="screenGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#cfeaff" stop-opacity=".9" />
+              <stop offset="1" stop-color="#4c8fd6" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="hoodie" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1a2338" />
+              <stop offset="1" stop-color="#05070d" />
+            </linearGradient>
+          </defs>
+          <!-- body / hoodie -->
+          <path d="M250 1920 C250 1500 330 1330 540 1300 C750 1330 830 1500 830 1920 Z" fill="url(#hoodie)" />
+          <!-- neck -->
+          <rect x="495" y="1180" width="90" height="140" rx="30" fill="#162034" />
+          <!-- head -->
+          <ellipse cx="540" cy="1060" rx="150" ry="185" fill="url(#faceGlow)" />
+          <!-- hair -->
+          <path d="M392 1010 C380 860 470 820 545 822 C640 822 705 870 692 1010 C670 940 610 900 545 905 C480 905 420 940 392 1010 Z" fill="#070a12" />
+          <!-- downcast eyes, brows -->
+          <path d="M462 1048 q28 12 56 0" stroke="#0a0f1c" stroke-width="9" fill="none" stroke-linecap="round" />
+          <path d="M562 1048 q28 12 56 0" stroke="#0a0f1c" stroke-width="9" fill="none" stroke-linecap="round" />
+          <path d="M455 1012 q35 -14 66 0" stroke="#0a0f1c" stroke-width="10" fill="none" stroke-linecap="round" />
+          <path d="M559 1012 q35 -14 66 0" stroke="#0a0f1c" stroke-width="10" fill="none" stroke-linecap="round" />
+          <path d="M510 1170 q30 8 60 0" stroke="#0a0f1c" stroke-width="7" fill="none" stroke-linecap="round" opacity=".7" />
+          <!-- arms holding phone -->
+          <path d="M300 1700 C340 1520 420 1440 500 1410" stroke="#121a2c" stroke-width="80" fill="none" stroke-linecap="round" />
+          <path d="M780 1700 C740 1520 660 1440 580 1410" stroke="#121a2c" stroke-width="80" fill="none" stroke-linecap="round" />
+          <!-- phone -->
+          <ellipse id="glow" cx="540" cy="1360" rx="260" ry="200" fill="url(#screenGlow)" />
+          <rect x="470" y="1290" width="140" height="210" rx="18" fill="#0d1220" />
+          <rect id="screen" x="478" y="1298" width="124" height="194" rx="12" fill="#a9d8ff" />
+          <!-- hands -->
+          <ellipse cx="482" cy="1420" rx="40" ry="55" fill="#24324f" />
+          <ellipse cx="598" cy="1420" rx="40" ry="55" fill="#24324f" />
+        </svg>
+        <div id="notif">🎃 <b>Банда</b>: мы уже выходим!</div>
+      </div>
+      <div id="ghost1" class="clip" data-start="0" data-duration="3.4">А ТЫ?</div>
+      <div id="ghost2" class="clip" data-start="0" data-duration="3.4">А ТЫ?</div>
+      <div id="question" class="clip" data-start="0" data-duration="3.4">А ТЫ<span class="q">?</span></div>
+      <div id="flash" class="layer clip" data-start="0" data-duration="3.4"></div>
+      <div id="vignette" class="layer clip" data-start="0" data-duration="3.4"></div>
+      <div id="grain" class="layer clip" data-start="0" data-duration="3.4"></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      // slow dolly in, then hard punch-in when the music cuts (1.9s)
+      tl.fromTo("#cam", { scale: 1.0, y: 0 }, { scale: 1.12, y: -40, duration: 1.5, ease: "sine.inOut" }, 0);
+      tl.to("#cam", { scale: 1.55, y: -260, duration: 0.18, ease: "power4.out" }, 1.75);
+      tl.to("#cam", { scale: 1.62, duration: 1.4, ease: "none" }, 1.93);
+      // phone flicker + incoming message
+      tl.fromTo("#screen", { opacity: 0.6 }, { opacity: 1, duration: 0.08, repeat: 3, yoyo: true }, 0.35);
+      tl.fromTo("#glow", { opacity: 0.6 }, { opacity: 1, duration: 0.1, repeat: 3, yoyo: true }, 0.35);
+      tl.fromTo("#notif", { opacity: 0, y: 40, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(2)" }, 0.4);
+      tl.to("#notif", { opacity: 0, duration: 0.15 }, 1.7);
+      // title slam
+      tl.set("#flash", { opacity: 0.85 }, 1.9);
+      tl.to("#flash", { opacity: 0, duration: 0.25, ease: "power2.out" }, 1.92);
+      tl.fromTo("#question", { opacity: 0, scale: 2.4 }, { opacity: 1, scale: 1, duration: 0.16, ease: "power4.in" }, 1.9);
+      tl.fromTo("#ghost1", { opacity: 0 }, { opacity: 0.8, x: -18, duration: 0.05 }, 2.06);
+      tl.fromTo("#ghost2", { opacity: 0 }, { opacity: 0.8, x: 18, duration: 0.05 }, 2.06);
+      tl.to(["#ghost1", "#ghost2"], { opacity: 0, x: 0, duration: 0.2 }, 2.14);
+      tl.to("#question", { x: 10, duration: 0.04, repeat: 5, yoyo: true }, 2.06);
+      tl.to("#question", { scale: 1.04, duration: 1.2, ease: "sine.out" }, 2.2);
+      tl.fromTo("#ghost1", { opacity: 0, x: 0 }, { opacity: 0.6, x: -12, duration: 0.04, repeat: 1, yoyo: true, immediateRender: false }, 2.9);
+      tl.fromTo("#ghost2", { opacity: 0, x: 0 }, { opacity: 0.6, x: 12, duration: 0.04, repeat: 1, yoyo: true, immediateRender: false }, 2.9);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

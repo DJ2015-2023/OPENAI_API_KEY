@@ -1,0 +1,12 @@
+node_modules/
+out/
+hf-scene4/.hyperframes/
+hf-scene4/node_modules/
+public/scene4.mp4
+public/audio/final_mix.wav
+public/vo/vo*.wav
+halloween-video/public/poster.jpg
+public/work-*/
+public/.scene4.hf-transaction-*/
+public/audio/
+public/intro.mp4
