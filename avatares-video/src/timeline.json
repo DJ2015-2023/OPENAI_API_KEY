@@ -1,0 +1,239 @@
+{
+ "fps": 30,
+ "total": 1646,
+ "hold": 45,
+ "intro": 16,
+ "outro": 9,
+ "characters": [
+  {
+   "from": 0,
+   "lead": 30,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 85,
+   "lead": 12,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 153,
+   "lead": 12,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 221,
+   "lead": 12,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 288,
+   "lead": 20,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 363,
+   "lead": 14,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 432,
+   "lead": 14,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 502,
+   "lead": 16,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 573,
+   "lead": 20,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 648,
+   "lead": 19,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 723,
+   "lead": 14,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 792,
+   "lead": 15,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 862,
+   "lead": 16,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 933,
+   "lead": 12,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 1001,
+   "lead": 12,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 1068,
+   "lead": 19,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 1143,
+   "lead": 14,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 1212,
+   "lead": 18,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 1286,
+   "lead": 12,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 1353,
+   "lead": 19,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 1428,
+   "lead": 20,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  },
+  {
+   "from": 1503,
+   "lead": 14,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "right"
+  },
+  {
+   "from": 1572,
+   "lead": 18,
+   "tail": 10,
+   "name": "Я БУДУ!!!",
+   "tag": "LATIN FUSION · 31.10",
+   "accent": "#E5512A",
+   "tagY": 1470,
+   "tagSide": "left"
+  }
+ ]
+}

@@ -56,6 +56,18 @@ def still_clip(src, dur, dst):
     run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", src, "-vf", vf, "-frames:v", str(n), "-c:v", "libx264", "-crf", "14", "-pix_fmt", "yuv420p", dst])
 
 
+def contain_frame(src, dst):
+    """Photo mode with "fit": "contain": the whole photo (e.g. a 4:5 poster/avatar) centred on a 9:16 canvas,
+    over a darkened blurred copy of itself, so no part of the design is cropped away."""
+    im = Image.open(src).convert("RGB")
+    bg = im.resize((W, int(im.height * W / im.width)) if im.height / im.width > H / W else (int(im.width * H / im.height), H))
+    bg = bg.crop(((bg.width - W) // 2, (bg.height - H) // 2, (bg.width - W) // 2 + W, (bg.height - H) // 2 + H))
+    bg = bg.filter(ImageFilter.GaussianBlur(40)).point(lambda v: int(v * 0.45))
+    fg = im.resize((W, int(im.height * W / im.width))) if im.width / im.height >= W / H else im.resize((int(im.width * H / im.height), H))
+    bg.paste(fg, ((W - fg.width) // 2, (H - fg.height) // 2))
+    bg.save(dst, quality=95)
+
+
 def grab(clip, t, dst):
     run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-ss", f"{t:.3f}", "-i", clip, "-frames:v", "1", "-q:v", "2", dst])
 
@@ -179,8 +191,8 @@ def main():
     segs = []
     t = 0.0
     for i, c in enumerate(chars):
-        lead = c.get("lead", LIVE_A + (INTRO if i == 0 else 0))
-        tail = c.get("tail", LIVE_B)
+        lead = c.get("lead", cfg.get("lead", LIVE_A)) + (INTRO if i == 0 else 0)
+        tail = c.get("tail", cfg.get("tail", LIVE_B))
         segs.append({"lead": lead, "tail": tail, "at": t})
         t += lead + hold + tail
     total = t
@@ -225,6 +237,9 @@ def main():
         src = media if os.path.isabs(media) else os.path.join(root, media)
         if "image" in c:  # photo mode: the "footage" is a slow push over the still
             lead = s["lead"]
+            if c.get("fit", cfg.get("fit")) == "contain":
+                contain_frame(src, os.path.join(gdir, "canvas.jpg"))
+                src = os.path.join(gdir, "canvas.jpg")
             still_clip(src, lead + s["tail"] + 0.2, os.path.join(gdir, "clip.mp4"))
         else:
             fz = float(c["freeze"])
@@ -233,6 +248,15 @@ def main():
             normalise(src, a0, lead + s["tail"] + 0.2, os.path.join(gdir, "clip.mp4"))
         grab(os.path.join(gdir, "clip.mp4"), lead, os.path.join(gdir, "freeze.jpg"))
         alpha = cutout(os.path.join(gdir, "freeze.jpg"), os.path.join(gdir, "cutout.png"))
+        keep = c.get("keepRect", cfg.get("keepRect"))
+        if keep:  # a region that always stays in colour (e.g. a poster's title/info block), feathered edges
+            x0, y0, x1, y1 = keep
+            box = Image.new("L", (W, H), 0)
+            ImageDraw.Draw(box).rectangle([x0, y0, x1, y1], fill=255)
+            box = np.asarray(box.filter(ImageFilter.GaussianBlur(18)), np.float32) / 255.0
+            rgba = Image.open(os.path.join(gdir, "freeze.jpg")).convert("RGBA")
+            rgba.putalpha(Image.fromarray((np.maximum(alpha, box) * 255).astype(np.uint8)))
+            rgba.save(os.path.join(gdir, "cutout.png"))
         freeze_assets(os.path.join(gdir, "freeze.jpg"), alpha, gdir, seed=i + 1)
         timeline["characters"].append({
             "from": int(round(s["at"] * FPS)),

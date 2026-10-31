@@ -17,6 +17,8 @@ const rand = (s: number) => {
   const x = Math.sin(s * 12.9898 + 78.233) * 43758.5453;
   return x - Math.floor(x);
 };
+/** Short holds (many characters) type twice as fast so the tag is complete well before the whip. */
+const TYPE_EVERY = TL.hold < 60 ? 1 : 2;
 const NAME_FONT = "'Rubik', sans-serif";
 const TAG_FONT = "'Caveat', cursive";
 
@@ -109,7 +111,7 @@ const NameTag: React.FC<{c: Char}> = ({c}) => {
     <div style={{position: 'absolute', top: c.tagY, ...(right ? {right: 60} : {left: 60}), transform: `rotate(-2deg) scale(${0.3 + 0.7 * pop})`, transformOrigin: right ? '100% 100%' : '0% 100%', display: 'flex', flexDirection: 'column', alignItems: right ? 'flex-end' : 'flex-start'}}>
       {c.tag && (
         <div style={{marginLeft: 70, marginRight: 70, marginBottom: -6, padding: '4px 26px 0', background: '#F3E9D2', clipPath: 'polygon(0 8%, 6% 0, 18% 6%, 33% 0, 51% 7%, 68% 0, 84% 6%, 100% 0, 98% 52%, 100% 100%, 82% 93%, 64% 100%, 47% 92%, 30% 100%, 14% 94%, 0 100%, 2% 50%)', fontFamily: TAG_FONT, fontWeight: 700, fontSize: 58, letterSpacing: 2, color: '#2A2420', textTransform: 'uppercase', minHeight: 70, minWidth: 60}}>
-          <Typed text={c.tag} at={2} every={2} />
+          <Typed text={c.tag} at={2} every={TYPE_EVERY} />
         </div>
       )}
       <div style={{position: 'relative'}}>
@@ -117,7 +119,7 @@ const NameTag: React.FC<{c: Char}> = ({c}) => {
         <div style={{position: 'absolute', inset: 0, transform: 'translate(12px, 12px) skewX(-6deg)', background: '#000'}} />
         <div style={{position: 'relative', padding: '10px 44px 8px', background: c.accent, border: '5px solid #111', transform: 'skewX(-6deg)'}}>
           <div style={{transform: 'skewX(6deg)', fontFamily: NAME_FONT, fontWeight: 900, fontSize: nameSize, lineHeight: 1.05, color: '#fff', whiteSpace: 'nowrap', textShadow: '4px 4px 0 #111, -2px -2px 0 #111, 2px -2px 0 #111, -2px 2px 0 #111', minWidth: 200}}>
-            <PopLetters text={c.name} at={5} every={2} accent={c.accent} />
+            <PopLetters text={c.name} at={5} every={TYPE_EVERY} accent={c.accent} />
           </div>
         </div>
         {/* lightning tail */}
