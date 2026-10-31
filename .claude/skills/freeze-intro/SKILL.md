@@ -41,6 +41,7 @@ Several characters chain: live A → freeze → live B → (whip) → next chara
      ]
    }
    ```
+   **Photo mode**: use `"image": "/abs/path/photo.jpg"` instead of `"video"`/`"freeze"` — the still becomes "live" footage (slow push-in + soft hand-held drift) and freezes after `lead` seconds. Best with portrait photos of one person, head-to-waist or full body.
    `tagY` = top of the tag in px (default 1080 ≈ chest/waist; move it so it never covers the face), `tagSide` left|right, `lead`/`tail` = seconds of live footage before/after the freeze (the shot must really contain them — check scene cuts with `ffmpeg -vf "select='gt(scene,0.2)',showinfo"` and keep lead+tail inside one shot).
 4. **Build assets + timeline + audio**: `python3 .claude/skills/freeze-intro/scripts/prepare.py <project_dir>`
    - normalises each clip to 1080×1920@30 (`public/gen/<i>/clip.mp4`), grabs the freeze frame, cuts the person out with **rembg `u2net_human_seg`**, renders `bg0.jpg` / `bg1.jpg` (red / brown halftone newsprint) and `echo.png`;

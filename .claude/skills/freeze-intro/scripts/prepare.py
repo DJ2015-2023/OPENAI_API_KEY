@@ -45,6 +45,17 @@ def normalise(src, start, dur, dst):
     run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-ss", f"{start:.3f}", "-t", f"{dur:.3f}", "-i", src, "-vf", vf, "-an", "-c:v", "libx264", "-crf", "14", "-pix_fmt", "yuv420p", dst])
 
 
+def still_clip(src, dur, dst):
+    """Photo mode: turn a still into "live" footage — slow push-in with a soft hand-held drift.
+    Cover-crops to 1080x1920 first, so the freeze frame and the cut-out line up with the clip."""
+    n = int(round(dur * FPS))
+    vf = (
+        f"scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,crop={W * 2}:{H * 2},"
+        f"zoompan=z='1.0+0.0010*on':x='iw/2-(iw/zoom/2)+sin(on/9)*6':y='ih/2-(ih/zoom/2)+cos(on/11)*6':d={n}:s={W}x{H}:fps={FPS},setsar=1"
+    )
+    run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", src, "-vf", vf, "-frames:v", str(n), "-c:v", "libx264", "-crf", "14", "-pix_fmt", "yuv420p", dst])
+
+
 def grab(clip, t, dst):
     run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-ss", f"{t:.3f}", "-i", clip, "-frames:v", "1", "-q:v", "2", dst])
 
@@ -210,12 +221,16 @@ def main():
     for i, (c, s) in enumerate(zip(chars, segs)):
         gdir = os.path.join(root, "public/gen", str(i))
         os.makedirs(gdir, exist_ok=True)
-        src = c["video"] if os.path.isabs(c["video"]) else os.path.join(root, c["video"])
-        fz = float(c["freeze"])
-        a0 = max(0.0, fz - s["lead"])
-        lead = fz - a0
-        clip_dur = lead + s["tail"] + 0.2
-        normalise(src, a0, clip_dur, os.path.join(gdir, "clip.mp4"))
+        media = c.get("video") or c["image"]
+        src = media if os.path.isabs(media) else os.path.join(root, media)
+        if "image" in c:  # photo mode: the "footage" is a slow push over the still
+            lead = s["lead"]
+            still_clip(src, lead + s["tail"] + 0.2, os.path.join(gdir, "clip.mp4"))
+        else:
+            fz = float(c["freeze"])
+            a0 = max(0.0, fz - s["lead"])
+            lead = fz - a0
+            normalise(src, a0, lead + s["tail"] + 0.2, os.path.join(gdir, "clip.mp4"))
         grab(os.path.join(gdir, "clip.mp4"), lead, os.path.join(gdir, "freeze.jpg"))
         alpha = cutout(os.path.join(gdir, "freeze.jpg"), os.path.join(gdir, "cutout.png"))
         freeze_assets(os.path.join(gdir, "freeze.jpg"), alpha, gdir, seed=i + 1)
