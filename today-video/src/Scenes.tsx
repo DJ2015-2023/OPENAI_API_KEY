@@ -442,7 +442,7 @@ export const Await: React.FC = () => {
       {cur >= 0 && (
         <Sequence from={caps[cur][0] - 2} key={cur}>
           <Block top={1560}>
-            <Word at={0} style={{...Big(caps[cur][1].length > 16 ? 64 : 100, caps[cur][2], caps[cur][2] === C.blood ? 'rgba(255,40,70,0.7)' : 'rgba(224,16,47,0.5)'), whiteSpace: 'nowrap'}}>
+            <Word at={0} style={{...Big(caps[cur][1].length > 20 ? 54 : caps[cur][1].length > 14 ? 66 : 100, caps[cur][2], caps[cur][2] === C.blood ? 'rgba(255,40,70,0.7)' : 'rgba(224,16,47,0.5)'), whiteSpace: 'nowrap'}}>
               {caps[cur][1]}
             </Word>
           </Block>
