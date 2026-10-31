@@ -1,0 +1,6 @@
+node_modules
+out
+public/audio
+public/clips
+__pycache__
+work
